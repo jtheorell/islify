@@ -80,9 +80,16 @@ imageStatGenInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
       
       #Now, how many pixels do we get now?
       bigIslandFullPixels <- islandPixels(locFileBigIslesFull)
+      
+      ##Here, we are just going to sum the number of pixels that are positive,
+      #and also, for convenience, export the fraction of the total area that
+      #is covered.
+      resList$totalPositivePixels <- sum(unlist(bigIslandFullPixels))
+      resList$positivePixelFractionOfTotal <- 
+        resList$totalPositivePixels/(nrow(locFileClean)*ncol(locFileClean))
       #Now, we are going to calculate how many nuclei that fit after filling
       #the islands, as a lake of course can take a nucleus. 
-      resList$nIsles <- round(sum(unlist(bigIslandFullPixels))/cellArea)
+      resList$nIsles <- round(resList$totalPositivePixels/cellArea)
       #We also introduce a new measurement, namely the ratio between the
       #empty and full. 
       resList$islandDensity <- sum(unlist(bigIslandPixels))/

@@ -66,7 +66,7 @@ importFile <- function(imgDir, frameNum, numOfImgs,
     #}
   } else if(grepl("\\.czi", imgDir)){
     message(imgDir)
-    locFile <- read.image(imgDir, normalize = FALSE)
+    locFile <- read.image(imgDir, normalize = FALSE)@.Data
     #This file format can contain essentially anything. For that reason, 
     #we are conservative here, and will only allow an n-dimensional array to go 
     #through. 

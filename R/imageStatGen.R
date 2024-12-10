@@ -178,5 +178,5 @@ imageStatGen <- function(imgDirs, imgNames, frameNumFocus,
   }
 
   row.names(resMat) <- imgNames
-  resMat
+  as.data.frame(resMat)
 }
