@@ -1,40 +1,46 @@
-imageStatGenOuter <- function(imgNum, imgDirs, frameNumIgG, frameNumTrans,
+imageStatGenOuter <- function(imgNum, imgDirs, frameNumFocus, frameNumReference,
                               sizeCutoff, 
-                              diagnoImgs, outDir, imgNames, numPix, fixed, 
-                              intensityCutoffIgG, 
-                              intensityCutoffTrans, 
+                              diagnoImgs, outDir, imgNames, numPix, highNoise, 
+                              intensityCutoffFocus, 
+                              intensityCutoffReference, nuclearToCellQuotient,
+                              reportIntensity,
                               numOfImgs){
-  #We start by analysing the transfection picture
-  transImageDat <- imageStatGenInner(imgNum = imgNum,
+  #We start by analysing the reference picture
+  secondImageDat <- imageStatGenInner(imgNum = imgNum,
                                      imgDirs = imgDirs, 
-                                     frameNum = frameNumTrans,
+                                     frameNum = frameNumReference,
                                      sizeCutoff = sizeCutoff, 
                                      diagnoImgs = FALSE, 
                                      numPix = numPix, 
-                                     fixed = fixed, 
-                                     intensityCutoff = intensityCutoffTrans,
+                                     highNoise = highNoise, 
+                                     intensityCutoff = intensityCutoffReference,
+                                     nuclearToCellQuotient = 
+                                       nuclearToCellQuotient,
+                                     reportIntensity = FALSE,
                                      numOfImgs = numOfImgs,
                                      returnMat = TRUE)
-  #Now, we locally import the IgG image
-  igGImageRaw <- importFile(imgDirs[[imgNum]], frameNumIgG, numOfImgs)
-  igGImageFiltered <- igGImageRaw
-  igGImageFiltered[which(transImageDat[[2]] == 0)] <- 0
-  igGImageDat <- imageStatGenInner(imgNum = 1,
-                                   imgDirs = list(list(igGImageFiltered)), 
+  #Now, we locally import the focus image
+  primaryImageRaw <- importFile(imgDirs[[imgNum]], frameNumFocus, numOfImgs)
+  primaryImageFiltered <- primaryImageRaw
+  primaryImageFiltered[which(secondImageDat[[2]] == 0)] <- 0
+  primaryImageDat <- imageStatGenInner(imgNum = 1,
+                                   imgDirs = list(list(primaryImageFiltered)), 
                                    frameNum = 1,
                                    sizeCutoff = sizeCutoff, 
                                    diagnoImgs = diagnoImgs, 
                                    outDir = outDir, 
                                    imgNames = imgNames[[imgNum]],
                                    numPix = numPix, 
-                                   fixed = fixed, 
-                                   intensityCutoff = intensityCutoffIgG,
+                                   highNoise = highNoise, 
+                                   intensityCutoff = intensityCutoffFocus,
+                                   nuclearToCellQuotient = 
+                                     nuclearToCellQuotient,
+                                   reportIntensity = reportIntensity,
+                                   fromImageStatGenOuter = TRUE,
                                    numOfImgs = numOfImgs,
-                                   otherPlotDat = igGImageRaw,
+                                   otherPlotDat = primaryImageRaw,
                                    returnMat = FALSE)
-  allImageDat <- c(transImageDat[[1]], igGImageDat)
-  names(allImageDat) <- paste0(names(allImageDat),
-                               rep(c("_transfection", "_IgG"), 
-                                   each = length(igGImageDat)))
-  allImageDat
+  names(secondImageDat[[1]]) <- paste0(names(secondImageDat[[1]]), "_reference")
+  names(primaryImageDat) <- paste0(names(primaryImageDat), "_focus")
+  c(secondImageDat[[1]], primaryImageDat)
 }

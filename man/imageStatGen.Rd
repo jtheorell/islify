@@ -2,20 +2,22 @@
 % Please edit documentation in R/imageStatGen.R
 \name{imageStatGen}
 \alias{imageStatGen}
-\title{Generation of cell-based assay scores}
+\title{Generation of fluorescence-related scores.}
 \usage{
 imageStatGen(
   imgDirs,
   imgNames,
-  frameNumIgG,
-  frameNumTrans = FALSE,
+  frameNumFocus,
+  frameNumReference = FALSE,
   sizeCutoff,
   diagnoImgs = FALSE,
   outDir = ".",
   numPix = "All",
-  fixed = FALSE,
-  intensityCutoffIgG = TRUE,
-  intensityCutoffTrans = TRUE,
+  highNoise = FALSE,
+  intensityCutoffFocus = TRUE,
+  intensityCutoffReference = TRUE,
+  reportIntensity = FALSE,
+  nuclearToCellQuotient = 0.66,
   numOfImgs = "All"
 )
 }
@@ -32,14 +34,17 @@ being composed of matrices representing the colors. See example for usage.}
 naming of the rows in the output matrix, but also for naming of the images
 if such are generated using the diagnoImgs flag.}
 
-\item{frameNumIgG}{This identifies which of the frames in the files that 
-contains the information about the autoantibody binding.}
+\item{frameNumFocus}{This identifies which of the frames in the files that 
+contains the information that should be measured primarily, such as IgG
+binding in the case of autoantibody screening.}
 
-\item{frameNumTrans}{Optionally, this identifies a frame in the files that 
-contains the information about the transfection, i.e. often the GFP signal.}
+\item{frameNumReference}{Optionally, this identifies a frame in the files 
+that can be used to focus the analysis to certain regions. It could be
+that only areas with GFP expression can contain meaningful expression of 
+the marker of primary interest, and then only these areas will be considered.}
 
-\item{sizeCutoff}{The size of a typical cell. This is used to identify 
-ring-shaped structures of a size equal to or larger than this cell threshold.
+\item{sizeCutoff}{The size of a typical cell nucleus. This is used to 
+identify structures of a size equal to or larger than this cell threshold.
 Smaller objects that are ring-shaped will be excluded with this cutoff, which
 reduces noise considerably, but the threshold should not be set too high as
 it then risks leading to the exclusion of true positive cells. This value
@@ -52,31 +57,42 @@ selected be returned?}
 used together with diagnoImgs = TRUE.}
 
 \item{numPix}{If the frames are very large, this can be used to reduce the 
-computational burden. For reproducibility reasons, it might be clever to
-run this multiple times, in this case, to bootstrap, or alternatively to
-set a seed before starting. NB! If this command is used, then the images
+computational burden. NB! If this command is used, then the images
 will not be identical from round to round, and will not be comparable to the
-output of other functions, as a randdom subset of the pictures are used.}
+output of other functions, as a random subset of the pictures are used.}
 
-\item{fixed}{Is the assay run with fixed or live cells? If the former, there
-will be a second run of noise reduction. Not all fixed assays need this extra
-precaution, but it is worth testing if the sesitivity is very poor.}
+\item{highNoise}{Is the assay especially noisy, with very high and individual
+background? If so, a second run of noise reduction can be used to increase
+signal-to-noise ratio. This is often but not always needed for fixed 
+cell-based assays, e.g.}
 
-\item{intensityCutoffIgG}{If an external intensity cutoff is used, e.g. if a 
+\item{intensityCutoffFocus}{If an external intensity cutoff is used, e.g. if a 
 large number of images from the same series are used, one can save
 computational time by defining the background on the positive control. See
 \code{\link{intensityCutoffGen}}. The two possible values here are a number
 and "TRUE", in which each individual frame gets a separate intensity cutoff.
 This latter option is suitable when it is unclear if all samples in a series
-have been generated with the same values, or, more commonly, if RGB-
+have been generated with the same imaging settings, or, more commonly, if RGB-
 compliant files are used as input, as these are always normalised to a 
 range from 0 to 1, and thus, the background in a negative frame will have 
 considerably higher values than in a positive sample, simply because the 
 rate from the lowest to the highest signal is more compressed in a case 
-with noise only.}
+with noise only. If individual values are used, thresholding is performed 
+with the auto_threshold function from the autothresholdr package, that uses
+the same thresholding algorithms as imageJ. Specifically, it is the "tri"
+option that is used. 
+See: \url{https://www.example.com}}
 
-\item{intensityCutoffTrans}{Same as above but for the transfection control,
+\item{intensityCutoffReference}{Same as above but for the control frame,
 if present.}
+
+\item{reportIntensity}{Should the sum of the intensities for all the 
+surviving islands be returned? Default is FALSE.}
+
+\item{nuclearToCellQuotient}{The quotient of the median nuclear width divided
+by the median cell width. Set to 0.66, as this is the quotient for HEK cells
+according to the literature. This is used to calculate how many cells that
+are clumped together in large, confluent multicell objects in the pictures.}
 
 \item{numOfImgs}{If the provided files are nd2 format, they can contain
 multiple files. In this case, this flag can be used to restrict the number of
@@ -90,14 +106,7 @@ been identified as cells of interest.
 \description{
 This function is the central umbrella function that takes a list of image 
 files or image file directories and generates a list of statistics for each
-of the files. Needed input is the directory, the frame number and the nucleus
-size cutoff. The latter can be found using the sizeCutoffGen function, which
-is the only other function that the user needs to be concerned about. 
-In this function, we start by defining a background threshold. This should be
-individual, as the frames can have considerably different background 
-intensities. We here take advantage of the auto_thresh function in the 
-autothresholdr package, that uses the same background thresholding algorithms
-as imageJ. See: https://imagej.net/plugins/auto-threshold
+of the files.
 }
 \examples{
 #Retrieve the example data

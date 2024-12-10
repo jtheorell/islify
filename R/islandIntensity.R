@@ -1,4 +1,4 @@
-#Island intensity is calculated here
+#Median island intensity is calculated here
 islandIntensity <- function(picture, islandPicture){
   if(length(picture@x) != length(islandPicture@x)){
     stop("The picture and he island picture differ in size")

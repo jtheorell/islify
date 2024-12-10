@@ -7,5 +7,9 @@ pixReduction <- function(locFile, numPix){
       locVals <- (topVal-(numPix-1)):topVal
     }
   })
-  locFile[rangeList[[1]],rangeList[[2]]]
+  if(is.matrix(locFile)){
+    locFile[rangeList[[1]],rangeList[[2]]]
+  } else {
+    locFile[rangeList[[1]],rangeList[[2]],]
+  }
 }

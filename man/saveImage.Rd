@@ -7,8 +7,8 @@
 saveImage(
   imgDirs,
   imgNames,
-  frameNum,
-  frameCol,
+  frameNums = "All",
+  frameCols,
   normTo = "bit",
   numBit = 16,
   outDir,
@@ -24,29 +24,31 @@ files are currently supported.}
 naming of the rows in the output matrix, but also for naming of the images
 if such are generated using the diagnoImgs flag.}
 
-\item{frameNum}{This identifies which of the frames in the files that 
-contains the information about the autoantibody binding.}
+\item{frameNums}{This identifies which of the frames in the files that 
+should be plotted. Defaults to "All", which then also generates a merge.}
 
-\item{frameCol}{Which color does the frame in question have? Strangely, it
-varies in the nd2 files - not all are "R-G-B", but "G-R-B" also occurs. 
-Can take the values "R", "G", and "B" for red, green and blue.}
+\item{frameCols}{Which color does the frame/frames in question have? 
+Strangely, in some file formats such as nd2, it varies - not all are 
+"R-G-B", but "G-R-B" also occurs. Can take the values "R"/"Red", "G"/"Green",
+and "B"/"Blue". Should be a vector the same length as frameNums. If nothing
+is provided, it defaults to only saving the merge.}
 
 \item{normTo}{This argument has three possible values: "bit", "max" or a
-numeric value. Max is png standard, whereas the former makes all 
-pictures in a set comparable, but will make it hard to see the subtle shifts
-often present in negative files. The third option can be used if the max
-value in a set of files should be used, but this then needs to be externally
-defined. If this value is set to a lower value than the true max, the data
-will be truncated and a warning thrown.}
+numeric value/a numeric vector the length of frameNums. Max is png standard,
+whereas "bit" makes all pictures in a set comparable, but will make it hard
+to see the subtle shifts often present in negative files. The third option
+can be used if the max value in a set of files should be used, but this then
+needs to be externally defined. If this value is set to a lower value than
+the true max, the data will be truncated and a warning thrown.}
 
 \item{numBit}{How many bit are the nd2 files? Can be found using 
 \code{\link{RBioFormats::read.metadata}} function, in the 
 "$coreMetadata$bitsPerPixel" slot. NB! If more than one image is present in
 the nd2 file, one needs to refer to the first slot in the list, i.e., sub-
-setting the metadata objeects with double hard brackets.}
+setting the metadata objects with double hard brackets.}
 
-\item{outDir}{The directory that the diagnoImages should be saved in. Only
-used together with diagnoImgs = TRUE.}
+\item{outDir}{The directory that the images should be saved in. Subfolders
+are created within this directory for each color.}
 
 \item{numOfImgs}{If the provided files are nd2 format, they can contain
 multiple files. In this case, this flag can be used to restrict the number of
@@ -57,11 +59,11 @@ computational burden. For reproducibility reasons, it might be clever to
 run this multiple times, in this case, to bootstrap, or alternatively to
 set a seed before starting. NB! If this command is used, then the images
 will not be identical from round to round, and will not be comparable to the
-output of other functions, as a randdom subset of the pictures are used.}
+output of other functions, as a random subset of the pictures are used.}
 }
 \value{
 Named png images that are scaled to the max allowed value in the 
-raw image file and coloured according to frameNum (1=red, 2=green, 3=blue).
+raw image file and coloured according to frameCol.
 }
 \description{
 THis function simply generates pngs from raw image files, such as .nd2.

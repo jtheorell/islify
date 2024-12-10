@@ -1,7 +1,7 @@
 #' Identification of a suitable size cutoff for cells
 #' 
-#' This function is needed in situations where the average cell size is not 
-#' known. What it does is that it identifies the average cell nucleus size
+#' This function is needed in situations where the cell size is not 
+#' known. What it does is that it identifies the median cell nucleus size
 #' in a provided file. In this case, therefore, it is important that the frame
 #' number identifies a frame with nuclear staining, such as DAPI or similar. 
 #' @param imgDirs The directory containing the image file/files that should be

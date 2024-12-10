@@ -1,9 +1,27 @@
 imageStatGenInner <- function(imgNum, imgDirs, frameNum, sizeCutoff, 
-                              diagnoImgs, outDir, imgNames, numPix, fixed, 
-                              intensityCutoff, numOfImgs, otherPlotDat = FALSE,
-                              returnMat){
+                              diagnoImgs, outDir, imgNames, numPix, highNoise, 
+                              intensityCutoff, nuclearToCellQuotient,
+                              numOfImgs, reportIntensity, otherPlotDat = FALSE,
+                              returnMat, fromImageStatGenOuter = FALSE){
   imgDir <- imgDirs[[imgNum]]
-  locFile <- importFile(imgDir, frameNum, numOfImgs)
+  locFile <- importFile(imgDir, frameNum, numOfImgs, 
+                        fromImageStatGenOuter = fromImageStatGenOuter)
+  if(max(locFile) == 1){
+    message("The max value in this file is 1. Therefore, it will be re-scaled",
+            " and rounded, so that the max value is 1000, and all values are ",
+            "integers.")
+    
+    if(is.numeric(intensityCutoff)){
+      if(intensityCutoff > 1){
+        stop("The provided intensityCutoff is higher than the max value, so all",
+             " datapoints will be removed. Change this and try again.")
+      } else {
+        intensityCutoff <- intensityCutoff*1000
+      }
+    }
+    #Here, we need to change the values into 
+    locFile <- round(locFile*1000)
+  }
   #Here, we restrict the number of pixels, in applicable cases, to a randomly
   #located subset of the frame
   if(is.numeric(numPix)){
@@ -20,7 +38,7 @@ imageStatGenInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
   #Now, we are going to introduce an optional second filtering step, where 
   #we disregard the information from the areas devoid of cells, and also remove
   #the noise from the non-important cells. 
-  if(fixed){
+  if(highNoise){
     intensityCutoff2 <- auto_thresh(round(locFileClean*100), 
                                     "tri", ignore_black = TRUE)/100
     locFileClean[which(locFile <= intensityCutoff2)] <- 0 
@@ -37,26 +55,60 @@ imageStatGenInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
     locFileIslified <- islandNaming(locFile01)
     
     #Importantly, we also need to remove the now zero points from the 
-    #locFileClean, as some points are exclded by the dbscan function. 
+    #locFileClean, as some points are excluded by the dbscan function. 
     locFileClean[which(locFileIslified == 0)] <- 0
     locFileIslifiedSparse <- Matrix(locFileIslified, sparse = TRUE)
-    diameters <- islandDiameter(locFileIslifiedSparse)
+    diameters <- islandDiameter(locFileIslifiedSparse, statistic = "min")
+    resList <- list()
     if(any(diameters > sizeCutoff)){
       locFileBigIsles <- islandRemoval(locFileIslifiedSparse, diameters,
                                        sizeCutoff,
                                        origDims = dim(locFileClean))
-      bigIslandIndexes <- unique(locFileBigIsles@x)
+      #Now, we calculate the number of pixels per island
+      
+      bigIslandPixels <- islandPixels(locFileBigIsles)
+      #Here, we divide the islands by the number of pixels that a circle with
+      #a diameter of the average nuclear width * 1/the nuclear/cell width 
+      #quotingent, always rounding upwards (for now). 
+      cellArea <- pi*((sizeCutoff*(1/nuclearToCellQuotient)/2)^2)
+      
+      #Now, we introduce a new statistic, namely the filling of the islands. 
+      #This is done to avoid punishing cells with a pure surface staining, 
+      #that currently get much fewer counts than they otherwise would. 
+      locFileBigIslesFull <- islandFill(locFileBigIsles, 
+                                        origDims = dim(locFileClean))
+      
+      #Now, how many pixels do we get now?
+      bigIslandFullPixels <- islandPixels(locFileBigIslesFull)
+      #Now, we are going to calculate how many nuclei that fit after filling
+      #the islands, as a lake of course can take a nucleus. 
+      resList$nIsles <- round(sum(unlist(bigIslandFullPixels))/cellArea)
+      #We also introduce a new measurement, namely the ratio between the
+      #empty and full. 
+      resList$islandDensity <- sum(unlist(bigIslandPixels))/
+        sum(unlist(bigIslandFullPixels))
+      #We also include information about the used filter threshold(s)
+      resList$filterTreshold <- intensityCutoff
+      if(highNoise){
+        resList$secondFilterThreshold <- intensityCutoff2
+      }
+      if(reportIntensity){
+        #Here, we add information about the sum of intensity in the big islands
+        locFileBigIslesMat <- as.matrix(locFileBigIsles)
+        locFileClean[which(locFileBigIslesMat == 0)] <- 0
+        resList$intensitySum <- sum(locFileClean)
+      }
+      
+      
     } else {
       locFileBigIsles <- new("nullDgCMatrix")
-      bigIslandIndexes <- 0
+      resList$nIsles <- resList$islandDensity <- 0
+      if(reportIntensity){
+        resList$intensitySum <- 0
+      }
+      
     }
 
-      resList <- list()
-      resList$nIsles <- length(unique(locFileBigIsles@x))
-      
-      #resList$intensitySum <- sum(locFileClean)
-      #
-     
       if(resList$nIsles > 0){
         bigClean <- as.matrix(locFileClean)
         locFileBigIslesMat <- as.matrix(locFileBigIsles)
