@@ -1,14 +1,13 @@
-#' @importFrom abind abind
 importFile <- function(imgDir, frameNum, numOfImgs, 
                        fromImageStatGenOuter = FALSE){
-  if(is.list(imgDir)){
+  if(is.array(imgDir)){
     #Here we send a message only in the cases where the reason for this aberrance
-    #is coming from within the software itself. 
+    #is not coming from within the software itself. 
     if(fromImageStatGenOuter == FALSE){
       message("This object is interpreted as an image file and not a directory")
     }
     if(is.numeric(frameNum)){
-      locFile <- imgDir[[frameNum]]
+      locFile <- imgDir[,,frameNum]
     } else if(frameNum == "All"){
       locFile <- imgDir
     }
@@ -42,7 +41,7 @@ importFile <- function(imgDir, frameNum, numOfImgs,
     } else if(frameNum == "All"){
       locFile
     } else {
-      error("Cannot interpret frameNum. Change input to All or a value.")
+      stop("Cannot interpret frameNum. Change input to All or a value.")
     }
   } else if(grepl(".tif", imgDir)){
     message(imgDir)
@@ -52,7 +51,7 @@ importFile <- function(imgDir, frameNum, numOfImgs,
     } else if(frameNum == "All"){
       locFile
     } else {
-      error("Cannot interpret frameNum. Change input to All or a value.")
+      stop("Cannot interpret frameNum. Change input to All or a value.")
     }
     #Here, we handle the situation where the imported file follow RGB standards
     #and thus contains three colors for each 
@@ -76,7 +75,7 @@ importFile <- function(imgDir, frameNum, numOfImgs,
       } else if(frameNum == "All"){
         locFile
       } else {
-        error("Cannot interpret frameNum. Change input to All or a value.")
+        stop("Cannot interpret frameNum. Change input to All or a value.")
       }
     }
   } else {

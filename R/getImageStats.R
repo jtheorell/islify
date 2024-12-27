@@ -9,16 +9,16 @@
 #' @importFrom RBioFormats read.image
 #' @importFrom autothresholdr auto_thresh
 #' @importFrom Matrix Matrix sparseMatrix summary
-#' @importFrom stats sd median
-#' @importFrom BiocParallel bplapply
+#' @importFrom stats sd median quantile
 #' @importFrom dbscan dbscan
-#' @param imgDirs The directory containing the image files. Only nd2,
-#' tiff and png formats are currently supported, and nd2 or non-normalised,
-#' integer TIFF are clearly preferable.
-#' There is an option here, which is mainly for example purposes, using the
-#' provided dataset, and that is that a list of image files can be provided 
-#' directly. These should then be in the form of a list of lists, each sublist 
-#' being composed of matrices representing the colors. See example for usage. 
+#' @importFrom abind abind
+#' @importFrom methods new 
+#' @param imgDirs A vector or list of pathways, including filenames, to the
+#' images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are 
+#' currently supported are nd2, czi, tiff, png or lists of images, in the form 
+#' of three-dimensional arrays, where each layer in the third dimension 
+#' represents a color. nd2, czi or non-normalised, integer TIFF are clearly 
+#' preferable for memory and resolution purposes. 
 #' @param imgNames The names of the images. This argument is used both for
 #' naming of the rows in the output matrix, but also for naming of the images
 #' if such are generated using the diagnoImgs flag. 
@@ -77,41 +77,44 @@
 #' @return A data frame with a number of statistics for the individual images.
 #' Optionally, a directory containing images identifying the regions that have
 #' been identified as cells of interest. 
-#' @export imageStatGen
+#' @export getImageStats
 #' @examples
 #' #Retrieve the example data
 #' data(posImage)
-#' data(noisyNegImage)
-#' data(clearNegImage)
+#' data(negImage)
 #' 
-#' sizeCutoff <- sizeCutoffGen(imgDirs = clearNegImage, frameNum = 2)
-#' intensityCutoff <- intensityCutoffGen(imgDirs = posImage, frameNum = 1)
+#' #First, establish the average nuclear size. Here, tje nuclei from one image
+#' #is generally enough. 
+#' sizeCutoff <- getSizeCutoff(imgDirs = list(negImage), frameNum = 3)
+#' 
+#' #Now, we start with the optimal scenario, where there, in addition to the 
+#' #blue nuclear dye and the e.g. red patient IgG dye, is also a transfection 
+#' #control dye, such as GFP. In this case, the algorithm will filter out all 
+#' #object with a smaller diameter (in straig x-x, y-y lines) in the 
+#' #transfection control dye than the nuclear width. Then it identifies objects
+#' #that are stained with e.g. the IgG dye and that are wider and highe than
+#' #the standard nuclear width.
+#' 
+#' 
+#' we can run this in two ways: either only using the blue for size and 
+#' #red for the rest, or we can also incorporate the green color, saying e.g.
+#' #that we only are 
+#' 
+#' 
+#' 
+#' 
+#' intensityCutoffRed <- getIntensityCutoff(imgDirs = list(negImage, posImage), 
+#' frameNum = 1)
 #' 
 #' #And now, for the final generation of results
-#' allImgs <- list(posImage,noisyNegImage,clearNegImage)
-#'                        
-#' 
-#' \dontrun{
-#' result <- imageStatGen(imgDirs = allImgs,
-#'                        imgNames =c("Pos", "Noisy_neg", "Clear_neg"),
+#' result <- getImageStats(imgDirs = list(negImage, posImage),
+#'                        imgNames =c("Neg", "Pos"),
 #'                        frameNum = 1,
+#'                        diagnoImgs = FALSE,
 #'                        sizeCutoff = sizeCutoff,
 #'                        intensityCutoff = intensityCutoff)
-#'                        
-#' #And here an example of how to use it with generation of images. 
-#' #If the imgDirs is a list of nd2 directories, they can be converted to
-#' #imgNames using this code: 
-#' #imgNames <- gsub(".+/|.nd2", "", imgDirs)
-#'
-#' result <- imageStatGen(imgDirs = allImgs,
-#'                        imgNames =c("Pos", "Noisy_neg", "Clear_neg"),
-#'                        frameNum = 1,
-#'                        sizeCutoff = sizeCutoff,
-#'                        diagnoImgs = TRUE,
-#'                        outDir = ".", 
-#'                        intensityCutoff = intensityCutoff)
-#' }
-imageStatGen <- function(imgDirs, imgNames, frameNumFocus,
+
+getImageStats <- function(imgDirs, imgNames, frameNumFocus,
                          frameNumReference = FALSE,
                          sizeCutoff, diagnoImgs = FALSE,
                          outDir = ".",
@@ -133,11 +136,7 @@ imageStatGen <- function(imgDirs, imgNames, frameNumFocus,
   if(is.matrix(imgDirs[[1]])){
     imgDirs <- list(imgDirs)
   }
-  #if(parallel){
-  #  BPOPTIONS <- bpoptions()
-  #} else {
-  #  BPOPTIONS <- bpoptions(workers = 1)
-  #}
+
   if(frameNumReference == FALSE){
     resMat <- do.call("rbind", lapply(1:length(imgDirs), 
                                       imageStatGenInner, 

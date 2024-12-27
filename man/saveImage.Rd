@@ -17,8 +17,10 @@ saveImage(
 )
 }
 \arguments{
-\item{imgDirs}{The directory containing the image files. NB! Only nd2
-files are currently supported.}
+\item{imgDirs}{The directory containing the image files. nd2, czi,
+tiff and png formats or a list of three-dimensional arrays, where each 
+layer in the third dimension represents a color are currently supported. 
+nd2, czi or non-normalised, integer TIFF are clearly preferable.}
 
 \item{imgNames}{The names of the images. This argument is used both for
 naming of the rows in the output matrix, but also for naming of the images
@@ -33,16 +35,20 @@ Strangely, in some file formats such as nd2, it varies - not all are
 and "B"/"Blue". Should be a vector the same length as frameNums. If nothing
 is provided, it defaults to only saving the merge.}
 
-\item{normTo}{This argument has three possible values: "bit", "max" or a
-numeric value/a numeric vector the length of frameNums. Max is png standard,
-whereas "bit" makes all pictures in a set comparable, but will make it hard
-to see the subtle shifts often present in negative files. The third option
-can be used if the max value in a set of files should be used, but this then
-needs to be externally defined. If this value is set to a lower value than
-the true max, the data will be truncated and a warning thrown.}
+\item{normTo}{This argument has three possible values: "bit", a 
+numeric value, or "max". Vectors of individual values the same length as 
+frameCols are also accepted. 
+"bit" makes all pictures in a set comparable, but will make it hard
+to see the subtle shifts often present in negative files. The value option is
+often the most suitable, but requires some knowledge of the range of values 
+expected in the file. For this, the \link{getImageIntensities} function can 
+be useful to provide insights to provide reasonable values. If this value is
+set to a lower value than the true max, the data will be truncated and a 
+warning thrown. "max", the standard in png or tiff file formats, and will 
+create non-comparable, often rather useless pictures, but it can be tried.}
 
 \item{numBit}{How many bit are the nd2 files? Can be found using 
-\code{\link{RBioFormats::read.metadata}} function, in the 
+\code{\link[RBioFormats]{read.metadata}} function, in the 
 "$coreMetadata$bitsPerPixel" slot. NB! If more than one image is present in
 the nd2 file, one needs to refer to the first slot in the list, i.e., sub-
 setting the metadata objects with double hard brackets.}

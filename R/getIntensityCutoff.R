@@ -1,19 +1,17 @@
 #' Identification of an intensity cutoff for a whole experiment
 #' 
 #' With this function, the otherwise integrated intensity cutoff is 
-#' externalised. This is ONLY useful in situations where the original values
+#' externalised. This is only useful in situations where the original values
 #' from the imaging have not been perturbed, so that the individual frames have
 #' different max values, and are not all compressed to a range from 0 to 1. NB!
 #' This requirement is not fulfilled if the files are exported as RGB compliant,
 #' as the RGB format always ranges from 0 to 1. 
-#' @param imgDirs The directory where the file(s) that will be used to generate
-#' the threshold is kept. If more than one file, then a median value is
-#' generated. Currently, this function is only implemented to work with 
-#' raw-value non-RGB TIFF files. 
-#' There is an option here, which is mainly for example purposes, using the
-#' provided dataset, and that is that a list of image files can be provided 
-#' directly. These should then be in the form of a list of lists, each sublist 
-#' being composed of matrices representing the colors. See example for useage. 
+#' @param imgDirs A vector or list of pathways, including filenames, to the
+#' images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are 
+#' currently supported are nd2, czi, tiff, png or lists of images, in the form 
+#' of three-dimensional arrays, where each layer in the third dimension 
+#' represents a color. nd2, czi or non-normalised, integer TIFF are clearly 
+#' preferable for memory and resolution purposes. 
 #' @param frameNum This identifies which of the frames in the file that 
 #' contains the information about the autoantibody binding.
 #' @param numOfImgs If the provided files are nd2 format, they can contain
@@ -24,10 +22,13 @@
 #' run this multiple times, in this case, to bootstrap, or alternatively to
 #' set a seed before starting. 
 #' @return An intensity cutoff value.
-#' @export intensityCutoffGen
 #' @examples
-#' See example in \code{\link{imageStatGen}}
-intensityCutoffGen <- function(imgDirs, frameNum, 
+#' #Load example data and run the function: 
+#' data(negImage)
+#' data(posImage)
+#' getIntensityCutoff(imgDirs = list(negImage, posImage), frameNum = 1)
+#' @export getIntensityCutoff
+getIntensityCutoff <- function(imgDirs, frameNum, 
                                numOfImgs = "All", numPix = "All"){
   #First, we deal with the special case where the imgDir is not a directory
   #or a list of files, but an individual file, either containing only one
@@ -36,7 +37,7 @@ intensityCutoffGen <- function(imgDirs, frameNum,
     imgDirs <- list(imgDirs)
   }
   #In the case where there was only one color matrix in the first place, or
-  #where the file is made up of alist of color matrices, we go on to deal with
+  #where the file is made up of a list of color matrices, we go on to deal with
   #these here. 
   if(is.matrix(imgDirs[[1]])){
     imgDirs <- list(imgDirs)

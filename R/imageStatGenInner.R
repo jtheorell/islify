@@ -6,21 +6,12 @@ imageStatGenInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
   imgDir <- imgDirs[[imgNum]]
   locFile <- importFile(imgDir, frameNum, numOfImgs, 
                         fromImageStatGenOuter = fromImageStatGenOuter)
-  if(max(locFile) == 1){
-    message("The max value in this file is 1. Therefore, it will be re-scaled",
-            " and rounded, so that the max value is 1000, and all values are ",
-            "integers.")
-    
-    if(is.numeric(intensityCutoff)){
-      if(intensityCutoff > 1){
-        stop("The provided intensityCutoff is higher than the max value, so all",
-             " datapoints will be removed. Change this and try again.")
-      } else {
-        intensityCutoff <- intensityCutoff*1000
-      }
-    }
-    #Here, we need to change the values into 
-    locFile <- round(locFile*1000)
+  #Now, in cases where the data already has been compressed, we need to 
+  #untegerize it for the functions below to work. 
+  if(max(locFile) <= 1){
+    rescaledList <- rescaleFrom01(locFile, intensityCutoff)
+    locFile <- rescaledList[[1]]
+    intensityCutoff <- intensityCutoff[[2]]
   }
   #Here, we restrict the number of pixels, in applicable cases, to a randomly
   #located subset of the frame
