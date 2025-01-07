@@ -16,22 +16,14 @@
 #' "R-G-B", but "G-R-B" also occurs. Can take the values "R"/"Red", "G"/"Green",
 #' and "B"/"Blue". Should be a vector the same length as frameNums. If nothing
 #' is provided, it defaults to only saving the merge. 
-#' @param normTo This argument has three possible values: "bit", a 
-#' numeric value, or "max". Vectors of individual values the same length as 
-#' frameCols are also accepted. 
-#' "bit" makes all pictures in a set comparable, but will make it hard
-#' to see the subtle shifts often present in negative files. The value option is
-#' often the most suitable, but requires some knowledge of the range of values 
-#' expected in the file. For this, the \link{getImageIntensities} function can 
-#' be useful to provide insights to provide reasonable values. If this value is
-#' set to a lower value than the true max, the data will be truncated and a 
-#' warning thrown. "max", the standard in png or tiff file formats, and will 
-#' create non-comparable, often rather useless pictures, but it can be tried.
-#' @param numBit How many bit are the nd2 files? Can be found using 
-#' \code{\link[RBioFormats]{read.metadata}} function, in the 
-#' "$coreMetadata$bitsPerPixel" slot. NB! If more than one image is present in
-#' the nd2 file, one needs to refer to the first slot in the list, i.e., sub-
-#' setting the metadata objects with double hard brackets.
+#' @param truncTo Above which value should the data be truncated? This argument
+#' has two possible inputs: a numeric value or "max". Vectors of 
+#' individual values, the same length as frameCols are also accepted. The value
+#' option is often the most suitable, but requires some knowledge of the range
+#' of values expected in the file. For this, the 
+#' \code{\link{getQuantileIntensities}} function can be useful to provide
+#' insights to provide reasonable values. If this value is set to a lower value
+#' than the true max, the data will be truncated and a warning thrown.
 #' @param outDir The directory that the images should be saved in. Subfolders
 #' are created within this directory for each color. 
 #' @param numOfImgs If the provided files are nd2 format, they can contain
@@ -43,118 +35,143 @@
 #' set a seed before starting. NB! If this command is used, then the images
 #' will not be identical from round to round, and will not be comparable to the
 #' output of other functions, as a random subset of the pictures are used. 
+#' @param saveImages Should images be saved? This of course seems like a rather
+#' pointless command for a function meant to save pictures, but it is there
+#' for development reasons. Don't use it!
+#' @seealso \code{\link{getQuantileIntensities}}
 #' @return Named png images that are scaled to the max allowed value in the 
 #' raw image file and coloured according to frameCol.
+#' @examples
+#' #Retrieve the example data
+#' data(posImage)
+#' data(negImage)
+#' 
+#' #To use this function, the getQuantileIntensities function is very helpful, as
+#' #it can be used to define reasonable truncTo values. It is of course 
+#' #important to use a strongly stained sample in this case, to make sure that 
+#' #the positive samples in the series are not overly truncated, reducing the 
+#' #visual signal-to-noise ratio.
+#' posQuants <- getQuantileIntensities(list(posImage), quantiles = 0.99)
+#' #We will use the 95th percentile
+#' posQuants[[1]][,"Percent_99"]
+#' #0.18867333 0.07580167 0.29820000
+#' 
+#' #And now to the function. NB! In this case, we are using the last 
+#' #"saveImages = FALSE" flag, which means that nothing is produced! Remove it
+#' #to use the function.
+#' saveImage(list(posImage, negImage), c("pos", "neg"), frameNums = "All", 
+#' frameCols = c("R", "G", "B"), truncTo = posQuants[[1]][,"Percent_99"],
+#' outDir = ".", saveImages = FALSE)
 #' 
 #' @export saveImage
 saveImage <- function(imgDirs, imgNames, frameNums = "All", frameCols,
-                      normTo = "bit", 
-                      numBit = 16, outDir, numOfImgs = "All", 
-                      numPix = "All"){
-  if(frameNums == "All"){
-    for(i in c("Merged_colors", frameCols)){
-      dir.create(paste0(outDir, "/",i))
-    }
-    
-  }
-  lapply(1:length(imgDirs), function(x){
-    imgDir <- imgDirs[[x]]
-    imgName <- imgNames[[x]]
-    #We start by the default, i.e. that we want to plot everything. 
+                      truncTo = "max", outDir = ".", numOfImgs = "All", 
+                      numPix = "All", saveImages = TRUE){
+  if(saveImages){
     if(frameNums == "All"){
-      locFile <- importFile(imgDir, 
-                            frameNum = "All", 
-                            numOfImgs = numOfImgs)
-      #Here, if max is 1, all other normalisation information will be discarded,
-      #with a warning. 
-      if(max(locFile) == 1 && (normTo[1] == "bit" || normTo[1] > 1)){
-        message("This file has a max value of 1, and therefore this will be",
-        "used for truncation purposes, if the provided ")
-        normTo <- 1
+      for(i in c("Merged_colors", frameCols)){
+        dir.create(paste0(outDir, "/",i))
       }
       
-      if(is.numeric(numPix)){
-        locFile <- pixReduction(locFile, numPix)
-      }
-      if(length(normTo) == 1){
-        if(normTo == "bit"){
-          normTo <- rep(2^numBit, length(frameCols))
-        } else if (normTo == "max"){
-          normTo <- vapply(seq_along(frameCols), function(y) max(locFile[,,y]),1)
-        } else{
-          normTo <- rep(normTo, length(frameCols))
+    }
+    lapply(1:length(imgDirs), function(x){
+      imgDir <- imgDirs[[x]]
+      imgName <- imgNames[[x]]
+      #We start by the default, i.e. that we want to plot everything. 
+      if(frameNums == "All"){
+        locFile <- importFile(imgDir, 
+                              frameNum = "All", 
+                              numOfImgs = numOfImgs)
+        #Here, if max is 1, all other normalisation information will be discarded,
+        #with a warning. 
+        if(max(locFile) == 1 && (truncTo[1] == "bit" || truncTo[1] > 1)){
+          message("This file has a max value of 1, and therefore this will be",
+                  "used for truncation purposes, if the provided ")
+          truncTo <- 1
         }
-      }
-      if(length(normTo) != length(frameCols)){
-        stop("Mismatch between the length of frameCols and normTo. Change this.")
-      }
-      #First, we make the plots for individual colors
-      for(i in seq_along(frameCols)){
-        frameCol <- frameCols[i]
-        saveImageInner(locImg = locFile[,,i], 
+        
+        if(is.numeric(numPix)){
+          locFile <- pixReduction(locFile, numPix)
+        }
+        if(length(truncTo) == 1){
+          if(truncTo == "bit"){
+            truncTo <- rep(2^numBit, length(frameCols))
+          } else if (truncTo == "max"){
+            truncTo <- vapply(seq_along(frameCols), function(y) max(locFile[,,y]),1)
+          } else{
+            truncTo <- rep(truncTo, length(frameCols))
+          }
+        }
+        if(length(truncTo) != length(frameCols)){
+          stop("Mismatch between the length of frameCols and truncTo. Change this.")
+        }
+        #First, we make the plots for individual colors
+        for(i in seq_along(frameCols)){
+          frameCol <- frameCols[i]
+          saveImageInner(locImg = locFile[,,i], 
+                         frameCol = frameCol, 
+                         truncToInner = truncTo[i], 
+                         imgName = imgName, 
+                         outDir = outDir,
+                         numBit = numBit)
+        }
+        #Then the common plot. 
+        #Here, we normalise to the range of the possible max value.
+        locImgNorm <- locFile
+        for(i in seq_along(frameCols)){
+          locImgNorm[,,i] <- locFile[,,i]/truncTo[i]
+        }
+        
+        frameNums <- vapply(frameCols, colToNum, 1)
+        
+        #Now, if a truncTo value lower than the max is used, a warning is thrown and
+        #the data is truncated
+        if(max(locImgNorm) > 1){
+          warning("The max value in the file exceeds the truncTo value and is truncated")
+          locImgNorm[which(locImgNorm > 1)] <- 1
+        }
+        #And now, we create a full rgb array. 
+        locArray <- array(0,dim= c(nrow(locImgNorm),
+                                   ncol(locImgNorm),
+                                   3))
+        for(i in seq_along(frameCols)){
+          locArray[,,frameNums[i]] <- locImgNorm[,,i]
+        }
+        
+        writePNG(locArray,paste0(outDir, "/Merged_colors/", imgName, "_merge.png"))
+      } else {
+        locFile <- importFile(imgDir, 
+                              frameNum = frameNums, 
+                              numOfImgs = numOfImgs)
+        saveImageInner(locImg = locFile, 
                        frameCol = frameCol, 
-                       normToInner = normTo[i], 
+                       truncToInner = truncTo, 
                        imgName = imgName, 
                        outDir = outDir,
                        numBit = numBit)
       }
-      #Then the common plot. 
-      #Here, we normalise to the range of the possible max value.
-      locImgNorm <- locFile
-      for(i in seq_along(frameCols)){
-        locImgNorm[,,i] <- locFile[,,i]/normTo[i]
-      }
       
-      frameNums <- vapply(frameCols, colToNum, 1)
-      
-      #Now, if a normTo value lower than the max is used, a warning is thrown and
-      #the data is truncated
-      if(max(locImgNorm) > 1){
-        warning("The max value in the file exceeds the normTo value and is truncated")
-        locImgNorm[which(locImgNorm > 1)] <- 1
-      }
-      #And now, we create a full rgb array. 
-      locArray <- array(0,dim= c(nrow(locImgNorm),
-                                 ncol(locImgNorm),
-                                 3))
-      for(i in seq_along(frameCols)){
-        locArray[,,frameNums[i]] <- locImgNorm[,,i]
-      }
-
-      writePNG(locArray,paste0(outDir, "/Merged_colors/", imgName, "_merge.png"))
-    } else {
-      locFile <- importFile(imgDir, 
-                            frameNum = frameNums, 
-                            numOfImgs = numOfImgs)
-      saveImageInner(locImg = locFile, 
-                     frameCol = frameCol, 
-                     normToInner = normTo, 
-                     imgName = imgName, 
-                     outDir = outDir,
-                     numBit = numBit)
-    }
-    
-    
-  })
+    })
+  }
 }
 
-saveImageInner <- function(locImg, frameCol, normToInner, 
+saveImageInner <- function(locImg, frameCol, truncToInner, 
                            imgName, outDir, numBit){
   
-  if(normToInner == "bit"){
-    normToInner <- 2^numBit
-  } else if (normToInner == "max"){
-    normToInner <- max(locImg)
+  if(truncToInner == "bit"){
+    truncToInner <- 2^numBit
+  } else if (truncToInner == "max"){
+    truncToInner <- max(locImg)
   }
   #Here, we normalise to the range of the possible max value.
-  locImgNorm <- locImg/normToInner
+  locImgNorm <- locImg/truncToInner
   
   frameNum <- colToNum(frameCol)
   
-  #Now, if a normTo value lower than the max is used, a warning is thrown and
+  #Now, if a truncTo value lower than the max is used, a warning is thrown and
   #the data is truncated
   if(max(locImgNorm) > 1){
-    warning("The max value in the file exceeds the normTo value and is truncated")
+    warning("The max value in the file exceeds the truncTo value and is truncated")
     locImgNorm[which(locImgNorm > 1)] <- 1
   }
   #And now, we create a full rgb array. 

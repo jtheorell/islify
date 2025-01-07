@@ -21,7 +21,7 @@
 #' computational burden. For reproducibility reasons, it might be clever to
 #' run this multiple times, in this case, to bootstrap, or alternatively to
 #' set a seed before starting. 
-#' @return An intensity cutoff value.
+#' @return An intensity cutoff value for the chosen color.
 #' @examples
 #' #Load example data and run the function: 
 #' data(negImage)
@@ -47,9 +47,13 @@ getIntensityCutoff <- function(imgDirs, frameNum,
     if(is.numeric(numPix)){
       locFile <- pixReduction(locFile, numPix)
     }
-    if(is.list(locFile)){
-      locFile <- locFile[[frameNum]]
+    #Now, we have to make a bit of a workaround again for the files that are 
+    #pre-normalised to the 0-1 range
+    if(max(locFile) <= 1){
+      auto_thresh(round(locFile*1000), "tri")/1000
+    } else {
+      auto_thresh(locFile, "tri")
     }
-    auto_thresh(locFile, "tri")
+      
   })))
 }

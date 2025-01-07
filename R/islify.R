@@ -1,4 +1,4 @@
-#' Generation of fluorescence-related scores.
+#' Generation of fluorescence-related data.
 #' 
 #' This function is the central umbrella function that takes a list of image 
 #' files or image file directories and generates a list of statistics for each
@@ -34,7 +34,7 @@
 #' Smaller objects that are ring-shaped will be excluded with this cutoff, which
 #' reduces noise considerably, but the threshold should not be set too high as
 #' it then risks leading to the exclusion of true positive cells. This value
-#' can be generated using the \code{\link{sizeCutoffGen}} function.
+#' can be generated using the \code{\link{getSizeCutoff}} function.
 #' @param numPix If the frames are very large, this can be used to reduce the 
 #' computational burden. NB! If this command is used, then the images
 #' will not be identical from round to round, and will not be comparable to the
@@ -46,7 +46,7 @@
 #' @param intensityCutoffFocus If an external intensity cutoff is used, e.g. if a 
 #' large number of images from the same series are used, one can save
 #' computational time by defining the background on the positive control. See
-#' \code{\link{intensityCutoffGen}}. The two possible values here are a number
+#' \code{\link{getIntensityCutoff}}. The two possible values here are a number
 #' and "TRUE", in which each individual frame gets a separate intensity cutoff.
 #' This latter option is suitable when it is unclear if all samples in a series
 #' have been generated with the same imaging settings, or, more commonly, if RGB-
@@ -58,26 +58,40 @@
 #' with the auto_threshold function from the autothresholdr package, that uses
 #' the same thresholding algorithms as imageJ. Specifically, it is the "tri"
 #' option that is used. 
-#' See: \url{https://www.example.com}
+#' 
+#' 
+#' 
+#' See: \url{https://www.example.com} #This needs to be updated to 
+#' 
+#' 
+#' 
+#' 
+#' 
 #' @param intensityCutoffReference Same as above but for the control frame,
 #' if present. 
+#' @param fraction Within each 
 #' @param reportIntensity Should the sum of the intensities for all the 
 #' surviving islands be returned? Default is FALSE. 
-#' @param nuclearToCellQuotient The quotient of the median nuclear width divided
-#' by the median cell width. Set to 0.66, as this is the quotient for HEK cells
-#' according to the literature. This is used to calculate how many cells that
-#' are clumped together in large, confluent multicell objects in the pictures. 
 #' @param diagnoImgs Should a images delimiting the islands that have been
 #' selected be returned?
+#' @param truncTo If diagnoImgs is TRUE, above which value should the data
+#' be truncated? This argument has two possible inputs: a numeric value or
+#' "max". Vectors of individual values, the same length as frameCols are also
+#' accepted. The value option is often the most suitable, but requires some
+#' knowledge of the range of values expected in the file. For this, the 
+#' \code{\link{getQuantileIntensities}} function can be useful to provide
+#' reasonable values. If this argument is set to a lower value than the true
+#' max, the data will be truncated and a warning thrown.
 #' @param outDir The directory that the diagnoImages should be saved in. Only
 #' used together with diagnoImgs = TRUE.
 #' @param numOfImgs If the provided files are nd2 format, they can contain
 #' multiple files. In this case, this flag can be used to restrict the number of
 #' used images.
-#' @return A data frame with a number of statistics for the individual images.
+#' @seealso \code{\link{getIntensityCutoff}}, \code{\link{getSizeCutoff}}
+#' @return A data frame with statistics for the individual images.
 #' Optionally, a directory containing images identifying the regions that have
 #' been identified as cells of interest. 
-#' @export getImageStats
+#' @export islify
 #' @examples
 #' #Retrieve the example data
 #' data(posImage)
@@ -87,42 +101,54 @@
 #' #is generally enough. 
 #' sizeCutoff <- getSizeCutoff(imgDirs = list(negImage), frameNum = 3)
 #' 
-#' #Now, we start with the optimal scenario, where there, in addition to the 
-#' #blue nuclear dye and the e.g. red patient IgG dye, is also a transfection 
-#' #control dye, such as GFP. In this case, the algorithm will filter out all 
-#' #object with a smaller diameter (in straig x-x, y-y lines) in the 
-#' #transfection control dye than the nuclear width. Then it identifies objects
-#' #that are stained with e.g. the IgG dye and that are wider and highe than
-#' #the standard nuclear width.
-#' 
-#' 
-#' we can run this in two ways: either only using the blue for size and 
-#' #red for the rest, or we can also incorporate the green color, saying e.g.
-#' #that we only are 
-#' 
-#' 
-#' 
+#' #We can run this algorithm in two ways: either only using the blue for size
+#' #and red for the rest, or we can also incorporate the green color, saying 
+#' #e.g.that we only are interested in IgG expression that colocalizes with GFP 
+#' #expression. We start with the simpler case.
 #' 
 #' intensityCutoffRed <- getIntensityCutoff(imgDirs = list(negImage, posImage), 
 #' frameNum = 1)
-#' 
-#' #And now, for the final generation of results
-#' result <- getImageStats(imgDirs = list(negImage, posImage),
+#' result <- islify(imgDirs = list(negImage, posImage),
 #'                        imgNames =c("Neg", "Pos"),
-#'                        frameNum = 1,
+#'                        frameNumFocus = 1,
 #'                        diagnoImgs = FALSE,
 #'                        sizeCutoff = sizeCutoff,
-#'                        intensityCutoff = intensityCutoff)
-
-getImageStats <- function(imgDirs, imgNames, frameNumFocus,
+#'                        intensityCutoffFocus = 
+#'                        intensityCutoffRed)
+#'                        
+#' #As can be noted above, diagnoImgs are set to FALSE, which means that the 
+#' #output will be restricted to statistics only. If set to TRUE, then an image
+#' #showing the selected areas in red on a black-and-white background are 
+#' #generated. In that case, a directory, outDir, also needs to be specified. 
+#' 
+#' #Now comes the more complex useage, where the reference color is also 
+#' #integrated. Here, to save time, only the negative image is used for 
+#' #reference as both are expected to have similar GFP intensities. 
+#' 
+#' intensityCutoffGreen <- getIntensityCutoff(imgDirs = list(negImage), 
+#' frameNum = 2)
+#' 
+#' resultWithGreen <- islify(imgDirs = list(negImage, posImage),
+#'                        imgNames =c("Neg", "Pos"),
+#'                        frameNumFocus = 1,
+#'                        frameNumReference = 2,
+#'                        diagnoImgs = FALSE,
+#'                        sizeCutoff = sizeCutoff,
+#'                        intensityCutoffFocus = 
+#'                        intensityCutoffRed,
+#'                        intensityCutoffReference = 
+#'                        intensityCutoffGreen)
+islify <- function(imgDirs, imgNames, frameNumFocus,
                          frameNumReference = FALSE,
                          sizeCutoff, diagnoImgs = FALSE,
+                         truncTo = "max",
                          outDir = ".",
-                         numPix = "All", highNoise = FALSE, 
+                         highNoise = FALSE, 
                          intensityCutoffFocus = TRUE, 
                          intensityCutoffReference = TRUE,
+                         fraction = 0.5,
                          reportIntensity = FALSE,
-                         nuclearToCellQuotient = 0.66,
+                         numPix = "All", 
                          numOfImgs = "All"){
   #First, we deal with the special case where the imgDir is not a directory
   #or a list of files, but an individual file, either containing only one
@@ -138,44 +164,53 @@ getImageStats <- function(imgDirs, imgNames, frameNumFocus,
   }
 
   if(frameNumReference == FALSE){
-    resMat <- do.call("rbind", lapply(1:length(imgDirs), 
-                                      imageStatGenInner, 
+    resDf <- as.data.frame(do.call("rbind", lapply(1:length(imgDirs), 
+                                      islifyInner, 
                                       imgDirs = imgDirs, 
                                       frameNum = frameNumFocus,
                                       sizeCutoff = sizeCutoff, 
                                       diagnoImgs = diagnoImgs, 
+                                      truncTo = truncTo,
                                       outDir = outDir, 
                                       imgNames = imgNames,
                                       numPix = numPix, 
                                       highNoise = highNoise, 
                                       intensityCutoff = intensityCutoffFocus,
+                                      fraction = fraction,
                                       reportIntensity = reportIntensity,
-                                      nuclearToCellQuotient = 
-                                        nuclearToCellQuotient,
                                       numOfImgs = numOfImgs,
-                                      returnMat = FALSE))
+                                      returnMat = FALSE)))
+    resDf$focFracTot <- resDf$totalPositivePixels/
+    resDf$focFracTotDensAdjust <- 
+      resDf$totalPositivePixels/resDf$islandDensity
+    resDf <- resDf[,c(1,2,4)]
+    colnames(resDf) <- c("intensityCutoff", "focFracTot",	
+                         "focFracTotDensAdjust")
   } else {
-    resMat <- do.call("rbind", lapply(1:length(imgDirs), imageStatGenOuter, 
-                                      imgDirs = imgDirs, 
-                                      frameNumFocus = frameNumFocus, 
-                                      frameNumReference = frameNumReference,
-                                      sizeCutoff = sizeCutoff, 
-                                      diagnoImgs = diagnoImgs, 
-                                      outDir = outDir, 
-                                      imgNames = imgNames,
-                                      numPix = numPix, 
-                                      highNoise = highNoise, 
-                                      intensityCutoffFocus = 
-                                        intensityCutoffFocus,
-                                      reportIntensity =
-                                        reportIntensity,
-                                      nuclearToCellQuotient = 
-                                        nuclearToCellQuotient,
-                                      intensityCutoffReference = 
-                                        intensityCutoffReference,
-                                      numOfImgs = numOfImgs))
+    resDf <- as.data.frame(do.call("rbind", lapply(1:length(imgDirs), 
+                                                   islifyOuter, 
+                                                   imgDirs = imgDirs, 
+                                                   frameNumFocus = 
+                                                     frameNumFocus, 
+                                                   frameNumReference = 
+                                                     frameNumReference,
+                                                   sizeCutoff = sizeCutoff, 
+                                                   diagnoImgs = diagnoImgs, 
+                                                   truncTo = truncTo,
+                                                   outDir = outDir, 
+                                                   imgNames = imgNames,
+                                                   numPix = numPix, 
+                                                   highNoise = highNoise, 
+                                                   intensityCutoffFocus = 
+                                                     intensityCutoffFocus,
+                                                   fraction = fraction,
+                                                   reportIntensity =
+                                                     reportIntensity,
+                                                   intensityCutoffReference = 
+                                                     intensityCutoffReference,
+                                                   numOfImgs = numOfImgs)))
   }
 
-  row.names(resMat) <- imgNames
-  as.data.frame(resMat)
+  row.names(resDf) <- imgNames
+  resDf
 }

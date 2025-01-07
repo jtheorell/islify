@@ -9,11 +9,11 @@ saveImage(
   imgNames,
   frameNums = "All",
   frameCols,
-  normTo = "bit",
-  numBit = 16,
-  outDir,
+  truncTo = "max",
+  outDir = ".",
   numOfImgs = "All",
-  numPix = "All"
+  numPix = "All",
+  saveImages = TRUE
 )
 }
 \arguments{
@@ -35,23 +35,14 @@ Strangely, in some file formats such as nd2, it varies - not all are
 and "B"/"Blue". Should be a vector the same length as frameNums. If nothing
 is provided, it defaults to only saving the merge.}
 
-\item{normTo}{This argument has three possible values: "bit", a 
-numeric value, or "max". Vectors of individual values the same length as 
-frameCols are also accepted. 
-"bit" makes all pictures in a set comparable, but will make it hard
-to see the subtle shifts often present in negative files. The value option is
-often the most suitable, but requires some knowledge of the range of values 
-expected in the file. For this, the \link{getImageIntensities} function can 
-be useful to provide insights to provide reasonable values. If this value is
-set to a lower value than the true max, the data will be truncated and a 
-warning thrown. "max", the standard in png or tiff file formats, and will 
-create non-comparable, often rather useless pictures, but it can be tried.}
-
-\item{numBit}{How many bit are the nd2 files? Can be found using 
-\code{\link[RBioFormats]{read.metadata}} function, in the 
-"$coreMetadata$bitsPerPixel" slot. NB! If more than one image is present in
-the nd2 file, one needs to refer to the first slot in the list, i.e., sub-
-setting the metadata objects with double hard brackets.}
+\item{truncTo}{Above which value should the data be truncated? This argument
+has two possible inputs: a numeric value or "max". Vectors of 
+individual values, the same length as frameCols are also accepted. The value
+option is often the most suitable, but requires some knowledge of the range
+of values expected in the file. For this, the 
+\code{\link{getQuantileIntensities}} function can be useful to provide
+insights to provide reasonable values. If this value is set to a lower value
+than the true max, the data will be truncated and a warning thrown.}
 
 \item{outDir}{The directory that the images should be saved in. Subfolders
 are created within this directory for each color.}
@@ -66,6 +57,10 @@ run this multiple times, in this case, to bootstrap, or alternatively to
 set a seed before starting. NB! If this command is used, then the images
 will not be identical from round to round, and will not be comparable to the
 output of other functions, as a random subset of the pictures are used.}
+
+\item{saveImages}{Should images be saved? This of course seems like a rather
+pointless command for a function meant to save pictures, but it is there
+for development reasons. Don't use it!}
 }
 \value{
 Named png images that are scaled to the max allowed value in the 
@@ -73,4 +68,30 @@ raw image file and coloured according to frameCol.
 }
 \description{
 THis function simply generates pngs from raw image files, such as .nd2.
+}
+\examples{
+#Retrieve the example data
+data(posImage)
+data(negImage)
+
+#To use this function, the getQuantileIntensities function is very helpful, as
+#it can be used to define reasonable truncTo values. It is of course 
+#important to use a strongly stained sample in this case, to make sure that 
+#the positive samples in the series are not overly truncated, reducing the 
+#visual signal-to-noise ratio.
+posQuants <- getQuantileIntensities(list(posImage), quantiles = 0.99)
+#We will use the 95th percentile
+posQuants[[1]][,"Percent_99"]
+#0.18867333 0.07580167 0.29820000
+
+#And now to the function. NB! In this case, we are using the last 
+#"saveImages = FALSE" flag, which means that nothing is produced! Remove it
+#to use the function.
+saveImage(list(posImage, negImage), c("pos", "neg"), frameNums = "All", 
+frameCols = c("R", "G", "B"), truncTo = posQuants[[1]][,"Percent_99"],
+outDir = ".", saveImages = FALSE)
+
+}
+\seealso{
+\code{\link{getQuantileIntensities}}
 }

@@ -1,8 +1,9 @@
-rescaleFrom01 <- function(locFile, intensityCutoff){
-  message("The max value in this file is 1. Therefore, it will be re-scaled",
-          " and rounded, so that the max value is 1000, and all values are ",
-          "integers.")
-  
+rescaleFrom01 <- function(locFile, intensityCutoff, printMessage = TRUE){
+  if(printMessage){
+    message("The max value in this file is 1. Therefore, it will be re-scaled",
+            " and rounded, so that the max value is 1000, and all values are ",
+            "integers.")
+  }
   if(is.numeric(intensityCutoff)){
     if(intensityCutoff > 1){
       stop("The provided intensityCutoff is higher than the max value, so all",

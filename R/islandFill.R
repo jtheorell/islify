@@ -18,15 +18,6 @@ islandFill <- function(islandPicture, origDims){
     fullIsland
   }))
   
-  #This code is more elegant, but alas, slower, so it is commented out for now.
-  #This might be converted to c++ code though. 
-  #splitIslandCols <- split(smIsl, f = paste(smIsl$column, smIsl$island))
-  #fullPicture <- do.call("rbind", lapply(splitIslandCols, function(x){
-  #    data.frame("row" = seq(min(x$row), max(x$row)), 
-  #               "column" = x$column[1], 
-  #               "island" = x$island[1])
-  #}))
-
   locSM <- sparseMatrix(i = fullPicture$row, 
                         j = fullPicture$column, 
                         x = fullPicture$island,

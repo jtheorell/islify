@@ -11,19 +11,24 @@
 #' of three-dimensional arrays, where each layer in the third dimension 
 #' represents a color. nd2, czi or non-normalised, integer TIFF are clearly 
 #' preferable for memory and resolution purposes. 
-#' @return A matrix with one row per color in the data and with thirteen columns
-#' of intensities from quantile 0 through to quantile 100. 
+#' @param quantiles Which quantiles should be returned? Values between and 
+#' including 0 and 1 are accepted. 
+#' @return A list of matrices with one row per color in the data and with 
+#' thirteen columns of intensities from percentile 0 through to percentile 100. 
 #' @examples
 #' #Load example data and run the function: 
 #' data(negImage)
-#' getImageIntensities(list(negImage))
+#' getQuantileIntensities(list(negImage))
 #' 
-#' @export getImageIntensities
-getImageIntensities <- function(imgDirs){
+#' @export getQuantileIntensities
+getQuantileIntensities <- function(imgDirs, quantiles = c(0.99)){
   lapply(imgDirs, function(x){
     locFile <- importFile(x, frameNum = "All", numOfImgs = "All")
-    do.call("rbind", lapply(seq(1, dim(locFile)[3]), function(y){
-      quantile(x[,,y], c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1))
+    locMat <- do.call("rbind", lapply(seq(1, dim(locFile)[3]), function(y){
+      quantile(x[,,y], quantiles)
     }))
+    locDf <- as.data.frame(locMat)
+    colnames(locDf) <- paste0("Percent_", gsub("|%", "", colnames(locMat)))
+    locDf
   })
 }

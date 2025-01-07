@@ -27,7 +27,7 @@ run this multiple times, in this case, to bootstrap, or alternatively to
 set a seed before starting.}
 }
 \value{
-An intensity cutoff value.
+An intensity cutoff value for the chosen color.
 }
 \description{
 With this function, the otherwise integrated intensity cutoff is 

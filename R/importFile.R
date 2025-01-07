@@ -1,9 +1,9 @@
 importFile <- function(imgDir, frameNum, numOfImgs, 
-                       fromImageStatGenOuter = FALSE){
+                       fromIslifyOuter = FALSE){
   if(is.array(imgDir)){
     #Here we send a message only in the cases where the reason for this aberrance
     #is not coming from within the software itself. 
-    if(fromImageStatGenOuter == FALSE){
+    if(fromIslifyOuter != "second"){
       message("This object is interpreted as an image file and not a directory")
     }
     if(is.numeric(frameNum)){
