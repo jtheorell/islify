@@ -18,28 +18,28 @@ saveImage(
 }
 \arguments{
 \item{imgDirs}{The directory containing the image files. nd2, czi,
-tiff and png formats or a list of three-dimensional arrays, where each 
-layer in the third dimension represents a color are currently supported. 
+tiff and png formats or a list of three-dimensional arrays, where each
+layer in the third dimension represents a color are currently supported.
 nd2, czi or non-normalised, integer TIFF are clearly preferable.}
 
 \item{imgNames}{The names of the images. This argument is used both for
 naming of the rows in the output matrix, but also for naming of the images
 if such are generated using the diagnoImgs flag.}
 
-\item{frameNums}{This identifies which of the frames in the files that 
+\item{frameNums}{This identifies which of the frames in the files that
 should be plotted. Defaults to "All", which then also generates a merge.}
 
-\item{frameCols}{Which color does the frame/frames in question have? 
-Strangely, in some file formats such as nd2, it varies - not all are 
+\item{frameCols}{Which color does the frame/frames in question have?
+Strangely, in some file formats such as nd2, it varies - not all are
 "R-G-B", but "G-R-B" also occurs. Can take the values "R"/"Red", "G"/"Green",
 and "B"/"Blue". Should be a vector the same length as frameNums. If nothing
 is provided, it defaults to only saving the merge.}
 
 \item{truncTo}{Above which value should the data be truncated? This argument
-has two possible inputs: a numeric value or "max". Vectors of 
+has two possible inputs: a numeric value or "max". Vectors of
 individual values, the same length as frameCols are also accepted. The value
 option is often the most suitable, but requires some knowledge of the range
-of values expected in the file. For this, the 
+of values expected in the file. For this, the
 \code{\link{getQuantileIntensities}} function can be useful to provide
 insights to provide reasonable values. If this value is set to a lower value
 than the true max, the data will be truncated and a warning thrown.}
@@ -51,7 +51,7 @@ are created within this directory for each color.}
 multiple files. In this case, this flag can be used to restrict the number of
 used images.}
 
-\item{numPix}{If the frames are very large, this can be used to reduce the 
+\item{numPix}{If the frames are very large, this can be used to reduce the
 computational burden. For reproducibility reasons, it might be clever to
 run this multiple times, in this case, to bootstrap, or alternatively to
 set a seed before starting. NB! If this command is used, then the images
@@ -63,33 +63,38 @@ pointless command for a function meant to save pictures, but it is there
 for development reasons. Don't use it!}
 }
 \value{
-Named png images that are scaled to the max allowed value in the 
+Named png images that are scaled to the max allowed value in the
 raw image file and coloured according to frameCol.
 }
 \description{
-THis function simply generates pngs from raw image files, such as .nd2.
+This function simply generates pngs from raw image files, such as .nd2.
 }
 \examples{
-#Retrieve the example data
+# Retrieve the example data
 data(posImage)
 data(negImage)
 
-#To use this function, the getQuantileIntensities function is very helpful, as
-#it can be used to define reasonable truncTo values. It is of course 
-#important to use a strongly stained sample in this case, to make sure that 
-#the positive samples in the series are not overly truncated, reducing the 
-#visual signal-to-noise ratio.
+# To use this function, the getQuantileIntensities function is very helpful,
+# as it can be used to define reasonable truncTo values. It is of course
+# important to use a strongly stained sample in this case, to make sure that
+# the positive samples in the series are not overly truncated, reducing the
+# visual signal-to-noise ratio.
 posQuants <- getQuantileIntensities(list(posImage), quantiles = 0.99)
-#We will use the 95th percentile
-posQuants[[1]][,"Percent_99"]
-#0.18867333 0.07580167 0.29820000
+# We will use the 99th percentile
+posQuants
+#    Percent_99
+# 1  0.3681333
+# 2  0.2476340
+# 3  0.3794010
 
-#And now to the function. NB! In this case, we are using the last 
-#"saveImages = FALSE" flag, which means that nothing is produced! Remove it
-#to use the function.
-saveImage(list(posImage, negImage), c("pos", "neg"), frameNums = "All", 
-frameCols = c("R", "G", "B"), truncTo = posQuants[[1]][,"Percent_99"],
-outDir = ".", saveImages = FALSE)
+# And now to the function. NB! In this case, we are using the last
+# "saveImages = FALSE" flag, which means that nothing is produced! Remove it
+# to use the function.
+saveImage(list(posImage, negImage), c("pos", "neg"),
+    frameNums = "All",
+    frameCols = c("R", "G", "B"), truncTo = posQuants[[1]][, "Percent_99"],
+    outDir = ".", saveImages = FALSE
+)
 
 }
 \seealso{

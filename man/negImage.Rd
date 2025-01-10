@@ -5,7 +5,7 @@
 \alias{negImage}
 \title{A few CASPR2-negative cells}
 \format{
-A three-dimensional array representing red (IgG), green (GFP) and 
+A three-dimensional array representing red (IgG), green (GFP) and
 blue (DAPI) colors.
 }
 \usage{

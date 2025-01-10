@@ -4,33 +4,52 @@
 \alias{getIntensityCutoff}
 \title{Identification of an intensity cutoff for a whole experiment}
 \usage{
-getIntensityCutoff(imgDirs, frameNum, numOfImgs = "All", numPix = "All")
+getIntensityCutoff(
+  imgDirs,
+  frameNum,
+  numOfImgs = "All",
+  numPix = "All",
+  threshold_method = "Triangle",
+  ignore_white = FALSE
+)
 }
 \arguments{
 \item{imgDirs}{A vector or list of pathways, including filenames, to the
-images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are 
-currently supported are nd2, czi, tiff, png or lists of images, in the form 
-of three-dimensional arrays, where each layer in the third dimension 
-represents a color. nd2, czi or non-normalised, integer TIFF are clearly 
+images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are
+currently supported are nd2, czi, tiff, png or lists of images, in the form
+of three-dimensional arrays, where each layer in the third dimension
+represents a color. nd2, czi or non-normalised, integer TIFF are clearly
 preferable for memory and resolution purposes.}
 
-\item{frameNum}{This identifies which of the frames in the file that 
+\item{frameNum}{This identifies which of the frames in the file that
 contains the information about the autoantibody binding.}
 
 \item{numOfImgs}{If the provided files are nd2 format, they can contain
-multiple files. In this case, this flag can be used to restrict the number of
-used images.}
+multiple files. In this case, this flag can be used to restrict the number
+of used images.}
 
-\item{numPix}{If the frames are very large, this can be used to reduce the 
+\item{numPix}{If the frames are very large, this can be used to reduce the
 computational burden. For reproducibility reasons, it might be clever to
 run this multiple times, in this case, to bootstrap, or alternatively to
 set a seed before starting.}
+
+\item{threshold_method}{The method used for thresholding. Available
+alternatives are the same as for the
+\code{\link[autothresholdr]{auto_thresh}} function. The default "Triangle"
+method is in no way the only option, but it seems to perform reasonably
+well under many circumstances.}
+
+\item{ignore_white}{This is passed on to the
+\code{\link[autothresholdr]{auto_thresh}} function. If a value, for example
+inherited from getQuantileIntensities, then the values above this level will
+not be considered when identifying the background threshold. Remedies some
+of the variance between negative and positive control samples.}
 }
 \value{
 An intensity cutoff value for the chosen color.
 }
 \description{
-With this function, the otherwise integrated intensity cutoff is 
+With this function, the otherwise integrated intensity cutoff is
 externalised. This is only useful in situations where the original values
 from the imaging have not been perturbed, so that the individual frames have
 different max values, and are not all compressed to a range from 0 to 1. NB!
@@ -38,8 +57,11 @@ This requirement is not fulfilled if the files are exported as RGB compliant,
 as the RGB format always ranges from 0 to 1.
 }
 \examples{
-#Load example data and run the function: 
+# Load example data and run the function:
 data(negImage)
 data(posImage)
 getIntensityCutoff(imgDirs = list(negImage, posImage), frameNum = 1)
+}
+\seealso{
+\code{\link[autothresholdr]{auto_thresh}}
 }

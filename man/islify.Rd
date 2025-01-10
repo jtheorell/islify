@@ -2,7 +2,7 @@
 % Please edit documentation in R/islify.R
 \name{islify}
 \alias{islify}
-\title{Generation of fluorescence-related data.}
+\title{Generation of islands and island derived statistics}
 \usage{
 islify(
   imgDirs,
@@ -10,45 +10,88 @@ islify(
   frameNumFocus,
   frameNumReference = FALSE,
   sizeCutoff,
-  diagnoImgs = FALSE,
+  intensityCutoffFocus = TRUE,
+  intensityCutoffReference = TRUE,
+  threshold_method = "Triangle",
+  ignore_white = FALSE,
+  fraction = 0.7,
+  reportIntensity = FALSE,
+  diagnoImgs = TRUE,
   truncTo = "max",
   outDir = ".",
   highNoise = FALSE,
-  intensityCutoffFocus = TRUE,
-  intensityCutoffReference = TRUE,
-  fraction = 0.5,
-  reportIntensity = FALSE,
   numPix = "All",
   numOfImgs = "All"
 )
 }
 \arguments{
 \item{imgDirs}{A vector or list of pathways, including filenames, to the
-images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are 
-currently supported are nd2, czi, tiff, png or lists of images, in the form 
-of three-dimensional arrays, where each layer in the third dimension 
-represents a color. nd2, czi or non-normalised, integer TIFF are clearly 
+images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are
+currently supported are nd2, czi, tiff, png or lists of images, in the form
+of three-dimensional arrays, where each layer in the third dimension
+represents a color. nd2, czi or non-normalised, integer TIFF are clearly
 preferable for memory and resolution purposes.}
 
 \item{imgNames}{The names of the images. This argument is used both for
 naming of the rows in the output matrix, but also for naming of the images
 if such are generated using the diagnoImgs flag.}
 
-\item{frameNumFocus}{This identifies which of the frames in the files that 
+\item{frameNumFocus}{This identifies which of the frames in the files that
 contains the information that should be measured primarily, such as IgG
 binding in the case of autoantibody screening.}
 
-\item{frameNumReference}{Optionally, this identifies a frame in the files 
+\item{frameNumReference}{Optionally, this identifies a frame in the files
 that can be used to focus the analysis to certain regions. It could be
-that only areas with GFP expression can contain meaningful expression of 
-the marker of primary interest, and then only these areas will be considered.}
+that only areas with GFP expression can contain meaningful expression of
+the marker of primary interest, and then only these areas will be 
+considered.}
 
-\item{sizeCutoff}{The size of a typical cell nucleus. This is used to 
+\item{sizeCutoff}{The size of a typical cell nucleus. This is used to
 identify structures of a size equal to or larger than this cell threshold.
-Smaller objects that are ring-shaped will be excluded with this cutoff, which
-reduces noise considerably, but the threshold should not be set too high as
-it then risks leading to the exclusion of true positive cells. This value
-can be generated using the \code{\link{getSizeCutoff}} function.}
+Smaller objects that are ring-shaped will be excluded with this cutoff,
+which reduces noise considerably, but the threshold should not be set too
+high as it then risks leading to the exclusion of true positive cells. This
+value can be generated using the \code{\link{getSizeCutoff}} function.}
+
+\item{intensityCutoffFocus}{If a series of images have been generated with
+the same settings and the original dynamic range of these images has
+been retained, it is preferred to calculate the intensity cutoff before
+and provide it here, but the value can also be calculated within
+the function. This parameter therefore takes either a value or TRUE,
+in which each individual frame gets a separate intensity cutoff. See
+\code{\link{getIntensityCutoff}}.
+This latter option is suitable when it is unclear if all samples in a
+series have been generated with the same imaging settings, or, more
+commonly, if RGB-compliant files are used as input, as these are always
+normalised to a range from 0 to 1, and thus, the background in a negative
+frame will have considerably higher values than in a positive sample,
+simply because the rate from the lowest to the highest signal is more
+stretched out in a case with noise only.}
+
+\item{intensityCutoffReference}{Same as above but for the reference frame,
+if present.}
+
+\item{threshold_method}{The method used for thresholding. Available
+alternatives are the same as for the
+\code{\link[autothresholdr]{auto_thresh}} function. The default "Triangle"
+method is in no way the only option, but it seems to perform reasonably
+well under many circumstances.}
+
+\item{ignore_white}{This is passed on to the
+\code{\link[autothresholdr]{auto_thresh}} function. If a value, for example
+inherited from getQuantileIntensities, then the values above this level will
+not be considered when identifying the background threshold. Remedies some
+of the variance between negative and positive control samples.}
+
+\item{fraction}{The central filter, after a crude minimal diameter
+criterion, checks if the island retains its width even if pixels below this
+fraction of the 99th percentile (to exclude extreme events at the top) of
+the intensity of the island are removed. This is meant to get rid of dead
+cells that genereally have a very homogenous staining pattern, whereas truly
+surface-stained cells have a more heterogeneous, ring-shaped structure.}
+
+\item{reportIntensity}{Should the sum of the intensities for all the
+surviving islands be returned? Default is FALSE.}
 
 \item{diagnoImgs}{Should a images delimiting the islands that have been
 selected be returned?}
@@ -57,7 +100,7 @@ selected be returned?}
 be truncated? This argument has two possible inputs: a numeric value or
 "max". Vectors of individual values, the same length as frameCols are also
 accepted. The value option is often the most suitable, but requires some
-knowledge of the range of values expected in the file. For this, the 
+knowledge of the range of values expected in the file. For this, the
 \code{\link{getQuantileIntensities}} function can be useful to provide
 reasonable values. If this argument is set to a lower value than the true
 max, the data will be truncated and a warning thrown.}
@@ -65,107 +108,101 @@ max, the data will be truncated and a warning thrown.}
 \item{outDir}{The directory that the diagnoImages should be saved in. Only
 used together with diagnoImgs = TRUE.}
 
-\item{highNoise}{Is the assay especially noisy, with very high and individual
-background? If so, a second run of noise reduction can be used to increase
-signal-to-noise ratio. This is often but not always needed for fixed 
-cell-based assays, e.g.}
+\item{highNoise}{Is the assay especially noisy, with very high and 
+individual background? If so, a second run of noise reduction can be used to
+increase signal-to-noise ratio. This is often but not always needed for
+fixed cell-based assays, e.g.}
 
-\item{intensityCutoffFocus}{If an external intensity cutoff is used, e.g. if a 
-large number of images from the same series are used, one can save
-computational time by defining the background on the positive control. See
-\code{\link{getIntensityCutoff}}. The two possible values here are a number
-and "TRUE", in which each individual frame gets a separate intensity cutoff.
-This latter option is suitable when it is unclear if all samples in a series
-have been generated with the same imaging settings, or, more commonly, if RGB-
-compliant files are used as input, as these are always normalised to a 
-range from 0 to 1, and thus, the background in a negative frame will have 
-considerably higher values than in a positive sample, simply because the 
-rate from the lowest to the highest signal is more compressed in a case 
-with noise only. If individual values are used, thresholding is performed 
-with the auto_threshold function from the autothresholdr package, that uses
-the same thresholding algorithms as imageJ. Specifically, it is the "tri"
-option that is used. 
-
-
-
-See: \url{https://www.example.com} #This needs to be updated to}
-
-\item{intensityCutoffReference}{Same as above but for the control frame,
-if present.}
-
-\item{fraction}{Within each}
-
-\item{reportIntensity}{Should the sum of the intensities for all the 
-surviving islands be returned? Default is FALSE.}
-
-\item{numPix}{If the frames are very large, this can be used to reduce the 
+\item{numPix}{If the frames are very large, this can be used to reduce the
 computational burden. NB! If this command is used, then the images
 will not be identical from round to round, and will not be comparable to the
 output of other functions, as a random subset of the pictures are used.}
 
 \item{numOfImgs}{If the provided files are nd2 format, they can contain
-multiple files. In this case, this flag can be used to restrict the number of
-used images.}
+multiple files. In this case, this flag can be used to restrict the number
+of used images.}
 }
 \value{
-A data frame with statistics for the individual images.
-Optionally, a directory containing images identifying the regions that have
-been identified as cells of interest.
+A data frame with statistics for the individual images:
+#' \describe{
+    \item{intensityCutoff_focus}{The intensity cutoff for the individual
+    file. If the reference is included, it will have a separate value.}
+    \item{fractionOfAll_focus}{The fraction of the total number of pixels
+    that pass the filters. If the reference is included, it will have a
+    separate value.}
+    \item{fractionOfRed_focus}{If a reference is included, then
+    fractionOfAll_focus/fractionOfAll_ref is also saved.}
+    \item{secondIntensityCutoff_focus}{If highNoise is TRUE, then the second
+    noise filter is included here. If the reference is included, it will
+    have a separate value.}
+}
+Optionally, if diagnoImgs = TRUE, a directory containing images identifying
+the regions that have been identified as cells of interest is exported.
 }
 \description{
-This function is the central umbrella function that takes a list of image 
+This function is the central umbrella function that takes a list of image
 files or image file directories and generates a list of statistics for each
 of the files.
 }
 \examples{
-#Retrieve the example data
+# Retrieve the example data
 data(posImage)
 data(negImage)
 
-#First, establish the average nuclear size. Here, tje nuclei from one image
-#is generally enough. 
+# First, establish the average nuclear size. Here, tje nuclei from one image
+# is generally enough.
 sizeCutoff <- getSizeCutoff(imgDirs = list(negImage), frameNum = 3)
 
-#We can run this algorithm in two ways: either only using the blue for size
-#and red for the rest, or we can also incorporate the green color, saying 
-#e.g.that we only are interested in IgG expression that colocalizes with GFP 
-#expression. We start with the simpler case.
+# We can run this algorithm in two ways: either only using the blue for size
+# and red for the rest, or we can also incorporate the green color, saying
+# e.g.that we only are interested in IgG expression that colocalizes with
+# GFP expression. We start with the simpler case.
 
-intensityCutoffRed <- getIntensityCutoff(imgDirs = list(negImage, posImage), 
-frameNum = 1)
-result <- islify(imgDirs = list(negImage, posImage),
-                       imgNames =c("Neg", "Pos"),
-                       frameNumFocus = 1,
-                       diagnoImgs = FALSE,
-                       sizeCutoff = sizeCutoff,
-                       intensityCutoffFocus = 
-                       intensityCutoffRed)
-                       
-#As can be noted above, diagnoImgs are set to FALSE, which means that the 
-#output will be restricted to statistics only. If set to TRUE, then an image
-#showing the selected areas in red on a black-and-white background are 
-#generated. In that case, a directory, outDir, also needs to be specified. 
+intensityCutoffRed <- getIntensityCutoff(
+    imgDirs = list(negImage, posImage),
+    frameNum = 1
+)
+result <- islify(
+    imgDirs = list(negImage, posImage),
+    imgNames = c("Neg", "Pos"),
+    frameNumFocus = 1,
+    sizeCutoff = sizeCutoff,
+    intensityCutoffFocus =
+        intensityCutoffRed,
+    diagnoImgs = FALSE
+)
 
-#Now comes the more complex useage, where the reference color is also 
-#integrated. Here, to save time, only the negative image is used for 
-#reference as both are expected to have similar GFP intensities. 
+# As can be noted above, diagnoImgs are set to FALSE, which means that the
+# output will be restricted to statistics only. If set to TRUE, then an
+# image showing the selected areas in red on a black-and-white background
+# are generated. In that case, a directory, outDir, also needs to be
+# specified.
 
-intensityCutoffGreen <- getIntensityCutoff(imgDirs = list(negImage), 
-frameNum = 2)
+# Now comes the more complex useage, where the reference color is also
+# integrated. Here, to save time, only the negative image is used for
+# reference as both are expected to have similar GFP intensities.
 
-resultWithGreen <- islify(imgDirs = list(negImage, posImage),
-                       imgNames =c("Neg", "Pos"),
-                       frameNumFocus = 1,
-                       frameNumReference = 2,
-                       diagnoImgs = FALSE,
-                       sizeCutoff = sizeCutoff,
-                       intensityCutoffFocus = 
-                       intensityCutoffRed,
-                       intensityCutoffReference = 
-                       intensityCutoffGreen)
+intensityCutoffGreen <- getIntensityCutoff(
+    imgDirs = list(negImage),
+    frameNum = 2
+)
+
+resultWithGreen <- islify(
+    imgDirs = list(negImage, posImage),
+    imgNames = c("Neg", "Pos"),
+    frameNumFocus = 1,
+    frameNumReference = 2,
+    sizeCutoff = sizeCutoff,
+    intensityCutoffFocus =
+        intensityCutoffRed,
+    intensityCutoffReference =
+        intensityCutoffGreen,
+    diagnoImgs = FALSE
+)
 }
 \seealso{
 \code{\link[autothresholdr]{auto_thresh}}
 
 \code{\link{getIntensityCutoff}}, \code{\link{getSizeCutoff}}
+\code{\link[autothresholdr]{auto_thresh}}
 }

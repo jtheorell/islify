@@ -3,17 +3,24 @@
 \docType{package}
 \name{islify-package}
 \alias{islify-package}
-\alias{islify}
 \title{Automatic scoring and classification of cell-based assay images}
 \description{
 This software is meant to be used for classification of images
 of cell-based assays for neuronal surface autoantibody detection or similar
-techniques. It takes imaging files as input and creates a composite score 
+techniques. It takes imaging files as input and creates a composite score
 from these, that for example can be used to classify samples as negative or
 positive for a certain antibody-specificity. The reason for its name is that
-I during its creation have envisioned the individual picture as an 
-archielago where we with different filters control the water level, and 
+I during its creation have envisioned the individual picture as an
+archielago where we with different filters control the water level, and
 thereby define islands with differing sizes and characteristics.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/Bioconductor/islify}
+  \item Report bugs at \url{https://github.com/Bioconductor/islify/issues}
+}
+
 }
 \author{
 Maintainer: Jakob Theorell <jakob.theorell@ki.se>

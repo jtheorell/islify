@@ -2,24 +2,28 @@ Package: islify
 Title: Automatic scoring and classification of cell-based assay images
 Version: 0.99.1
 Date: 2024-12-11Vi
-biocViews: Software,CellBasedAssays,BiomedicalInformatics,FeatureExtractioin,Visualization
+biocViews: Software,CellBasedAssays,BiomedicalInformatics,FeatureExtraction,
+    Visualization,Pathways,Classification
 Authors@R: 
     person('Jakob', 'Theorell', email = "jakob.theorell@ki.se",
         role = c("aut", "cre"), comment=c(ORCID="0000-0001-8752-3151"))
-Description: This software is meant to be used for classification of images of cell-based 
-    assays for neuronal surface autoantibody detection or similar techniques. It takes 
-    imaging files as input and creates a composite score from these, that for example can be
-    used to classify samples as negative or positive for a certain antibody-specificity. The
-    reason for its name is that I during its creation have thought about the individual picture
-    as an archielago where we with different filters control the water level, and thereby define 
-    islands with differing sizes and characteristics. 
+Description: This software is meant to be used for classification of images of
+    cell-based assays for neuronal surface autoantibody detection or similar
+    techniques. It takes imaging files as input and creates a composite score
+    from these, that for example can be used to classify samples as negative or
+    positive for a certain antibody-specificity. The reason for its name is
+    that I during its creation have thought about the individual picture as an
+    archielago where we with different filters control the water level as well
+    as ground characteristica, thereby finding islands of interest. 
 License: GPL-3
+URL: https://github.com/Bioconductor/islify
+BugReports: https://github.com/Bioconductor/islify/issues
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 Depends: R (>= 4.3)
 Imports:
     autothresholdr (>= 1.4.2), Matrix (>= 1.6.1), RBioFormats (>= 1.0.0), 
     tiff (>= 0.1.12), png (>= 0.1.8), dbscan (>= 1.1.12), abind (>= 1.4.8), 
-    methods (>= 4.3.3)
-Suggests: knitr, rmarkdown
+    methods (>= 4.3.3), stats (>= 4.3.3)
+Suggests: knitr, rmarkdown, testthat, BiocStyle
 VignetteBuilder: knitr
