@@ -24,8 +24,8 @@ preferable for memory and resolution purposes.}
 contains the information about the nuclear staining. In RGB-compliant files,
 this is often number 3.}
 
-\item{noiseThreshold}{This decides under what size in pixels that an islet is
-considered noise. Defaults to 10 pixels.}
+\item{noiseThreshold}{This decides under what size in pixels that an islet
+is considered noise. Defaults to 10 pixels.}
 
 \item{numPix}{If the frames are very large, this can be used to reduce the
 computational burden. For reproducibility reasons, it might be clever to

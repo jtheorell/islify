@@ -2,8 +2,8 @@
 % Please edit documentation in R/getQuantileIntensities.R
 \name{getQuantileIntensities}
 \alias{getQuantileIntensities}
-\title{Get information about the quantiles for the intensity values for all colors
-in an image}
+\title{Get information about the quantiles for the intensity
+values for all colors in an image}
 \usage{
 getQuantileIntensities(imgDirs, quantiles = c(0.99))
 }

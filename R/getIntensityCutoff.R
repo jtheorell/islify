@@ -4,8 +4,8 @@
 #' externalised. This is only useful in situations where the original values
 #' from the imaging have not been perturbed, so that the individual frames have
 #' different max values, and are not all compressed to a range from 0 to 1. NB!
-#' This requirement is not fulfilled if the files are exported as RGB compliant,
-#' as the RGB format always ranges from 0 to 1.
+#' This requirement is not fulfilled if the files are exported as RGB 
+#' compliant, as the RGB format always ranges from 0 to 1.
 #' @param imgDirs A vector or list of pathways, including filenames, to the
 #' images to be analysed, e.g. "Raw_images/Positive_ctrl.nd2". Formats that are
 #' currently supported are nd2, czi, tiff, png or lists of images, in the form

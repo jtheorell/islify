@@ -24,6 +24,28 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
+This software is primarily meant to be used for classification of images of
+cell-based assays for neuronal surface autoantibody detection or similar
+techniques, which is the standard diagnostic and research method of use
+in the field of autoantibody-driven autoimmune encephalitis, see e.g. 
+"Detection Methods for Autoantibodies in Suspected Autoimmune Encephalitis", 
+by Ricken et al, Frontiers in Neurology, 2018. Even as images of cell-based 
+assays for a long time have been commonplace in the diagnostic procedure, the 
+most wide-spread way of grading these is still by expert inspection and opinion.
+This is in my opinion problematic both as it hinders the dissemiation of
+research to environments that lack the sample volumes that can enable the 
+training of specialists in the area, and furthermore it might increase the 
+inter-rater variance. Thirdly, to be able to screen through thousands of
+samples, which is necessary to reach more epidemiological conclusions in this
+field, an automated screening methodology is warranted. This package has been 
+created to address these needs. 
+It takes images of cell-based assays as input and creates a composite score
+from these, that then can be used to classify samples as negative or
+positive for a certain antibody-specificity. The reason for the name "islify"
+is that I during its creation have thought about the individual picture as an
+archielago where we with different filters control the water level as well
+as ground characteristica, thereby creating and describing islands of interest. 
+
 Below, the standard workflow of islify is presented, with two different user
 cases; situations with and without a reference color. A reference color in this
 context refers to a color that is co-localized with the color of interest (here
@@ -73,8 +95,8 @@ quantIntensities
 ```
 This output tells us a number of things: first of all, these files are
 seemingly normalised to the 0-1 range. Often, this is done in an RGB-compliant
-manner, so that each files lowest and highest values are set to 0 and 1, but it
-is much preferred if files with the original intensities are saved, as this 
+manner, so that each files lowest and highest values are set to 0 and 1, but
+it is much preferred if files with the original intensities are saved, as this 
 will allow us to make more accurate between-image comparisons, which is of
 course the core point of this package. In this specific case, the files have
 been normalised together, and therefore they can still be compared with the
@@ -116,10 +138,10 @@ per color sub-directories. These eight images are summarised here:
 These images shows us a number of things, including that with this specific 
 HEK-derived cell-line, the nuclei are considerably smaller than the cells in
 many instances, and further that areas with very high EGFP expression does not
-always correlate strongly to high IgG binding. These plots also tell us that it
-seems like we got hte colors right: the blue color does look like the expected
-nuclear staining, and the green is as prevalent in the negImage as the 
-posImage, whereas the red image is negative for the negImage, which makes
+always correlate strongly to high IgG binding. These plots also tell us that
+it seems like we got hte colors right: the blue color does look like the 
+expected nuclear staining, and the green is as prevalent in the negImage as
+the posImage, whereas the red image is negative for the negImage, which makes
 sense, given that both were transfected, but the negImage was stained with
 negative control serum. 
 

@@ -1,5 +1,5 @@
-#' Get information about the quantiles for the intensity values for all colors
-#' in an image
+#' Get information about the quantiles for the intensity
+#' values for all colors in an image
 #'
 #' With this function, the user can get an overview of how the values for the
 #' intensities in a file or set of files are distributed. This is useful mainly
@@ -29,7 +29,8 @@ getQuantileIntensities <- function(imgDirs, quantiles = c(0.99)) {
             quantile(x[, , y], quantiles)
         }))
         locDf <- as.data.frame(locMat)
-        colnames(locDf) <- paste0("Percent_", gsub("|%", "", colnames(locMat)))
+        colnames(locDf) <- 
+            paste0("Percent_", gsub("|%", "", colnames(locMat)))
         locDf
     })
 }

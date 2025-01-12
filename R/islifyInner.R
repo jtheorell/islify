@@ -128,8 +128,8 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
             # Now, we calculate the number of pixels per island
             bigIslandPixels <- islandPixels(locFileBigIsles)
 
-            # Here, we export the number of positive pixels as a fraction of the
-            # total number of pixels in the frame.
+            # Here, we export the number of positive pixels as a fraction of
+            # the total number of pixels in the frame.
             resList$fractionOfAll_focus <-
                 sum(unlist(bigIslandPixels)) /
                     (dim(locFileBigIsles)[1] * dim(locFileBigIsles)[2])
@@ -166,8 +166,8 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
             c(nrow(locFile), ncol(locFile), 3)
         )
         # In the case where another file has been added that should be the
-        # background plot, i.e. when we are using the imageStatGenOuter, we add
-        # this here
+        # background plot, i.e. when we are using the imageStatGenOuter, we
+        # add this here
         plotDat <- locFile
 
         if (truncTo == "max") {

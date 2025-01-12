@@ -31,9 +31,9 @@ should be plotted. Defaults to "All", which then also generates a merge.}
 
 \item{frameCols}{Which color does the frame/frames in question have?
 Strangely, in some file formats such as nd2, it varies - not all are
-"R-G-B", but "G-R-B" also occurs. Can take the values "R"/"Red", "G"/"Green",
-and "B"/"Blue". Should be a vector the same length as frameNums. If nothing
-is provided, it defaults to only saving the merge.}
+"R-G-B", but "G-R-B" also occurs. Can take the values "R"/"Red", 
+"G"/"Green", and "B"/"Blue". Should be a vector the same length as 
+frameNums. If nothing is provided, it defaults to only saving the merge.}
 
 \item{truncTo}{Above which value should the data be truncated? This argument
 has two possible inputs: a numeric value or "max". Vectors of
@@ -48,8 +48,8 @@ than the true max, the data will be truncated and a warning thrown.}
 are created within this directory for each color.}
 
 \item{numOfImgs}{If the provided files are nd2 format, they can contain
-multiple files. In this case, this flag can be used to restrict the number of
-used images.}
+multiple files. In this case, this flag can be used to restrict the number
+of used images.}
 
 \item{numPix}{If the frames are very large, this can be used to reduce the
 computational burden. For reproducibility reasons, it might be clever to

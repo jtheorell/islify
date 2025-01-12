@@ -53,8 +53,8 @@ With this function, the otherwise integrated intensity cutoff is
 externalised. This is only useful in situations where the original values
 from the imaging have not been perturbed, so that the individual frames have
 different max values, and are not all compressed to a range from 0 to 1. NB!
-This requirement is not fulfilled if the files are exported as RGB compliant,
-as the RGB format always ranges from 0 to 1.
+This requirement is not fulfilled if the files are exported as RGB 
+compliant, as the RGB format always ranges from 0 to 1.
 }
 \examples{
 # Load example data and run the function:

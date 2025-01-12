@@ -13,8 +13,8 @@
 #' @param frameNum This identifies which of the frames in the file that
 #' contains the information about the nuclear staining. In RGB-compliant files,
 #' this is often number 3.
-#' @param noiseThreshold This decides under what size in pixels that an islet is
-#' considered noise. Defaults to 10 pixels.
+#' @param noiseThreshold This decides under what size in pixels that an islet
+#' is considered noise. Defaults to 10 pixels.
 #' @param numPix If the frames are very large, this can be used to reduce the
 #' computational burden. For reproducibility reasons, it might be clever to
 #' run this multiple times, in this case, to bootstrap, or alternatively to
