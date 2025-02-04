@@ -1,3 +1,7 @@
+Changes in version 0.99.3 (2025-02-04)
++ Adding new email address to Bioc-Devel mailing list. 
++ getQuantileIntensities bug removed. 
+
 Changes in version 0.99.1 (2025-01-10)
 + This is the first time the NEWS file is present.
 + For all previous changes, and those are hundreds, see the git push messages.

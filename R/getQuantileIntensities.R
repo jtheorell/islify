@@ -26,7 +26,7 @@ getQuantileIntensities <- function(imgDirs, quantiles = c(0.99)) {
         locFile <- importFile(x, frameNum = "All", numOfImgs = "All")
         locMat <- do.call("rbind", lapply(seq(1, dim(locFile)[3]), 
                                           function(y) {
-            quantile(x[, , y], quantiles)
+            quantile(locFile[, , y], quantiles)
         }))
         locDf <- as.data.frame(locMat)
         colnames(locDf) <- 
