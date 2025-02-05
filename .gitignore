@@ -1,11 +1,14 @@
 # History files
 .Rhistory
 .Rapp.history
+
+# OSX System files
 .DS_Store
 
 # Session Data files
 .RData
 .RDataTmp
+.Rproj
 
 # User-specific files
 .Ruserdata
