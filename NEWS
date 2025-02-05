@@ -1,3 +1,6 @@
+Changes in version 0.99.4 (2025-02-05)
++ DS_Store removed from git. 
+
 Changes in version 0.99.3 (2025-02-04)
 + Adding new email address to Bioc-Devel mailing list. 
 + getQuantileIntensities bug removed. 
