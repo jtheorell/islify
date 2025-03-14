@@ -44,6 +44,11 @@ getIntensityCutoff <- function(imgDirs, frameNum,
                                numPix = "All",
                                threshold_method = "Triangle",
                                ignore_white = FALSE) {
+    #Before starting, we just check the sanity here
+    
+    
+    
+    
     # First, we deal with the special case where the imgDir is not a directory
     # or a list of files, but an individual file, either containing only one
     # color matrix or a list of color matrices.

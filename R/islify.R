@@ -64,10 +64,10 @@
 #' of the variance between negative and positive control samples.
 #' @param fraction The central filter, after a crude minimal diameter
 #' criterion, checks if the island retains its width even if pixels below this
-#' fraction of the 99th percentile (to exclude extreme events at the top) of
-#' the intensity of the island are removed. This is meant to get rid of dead
-#' cells that genereally have a very homogenous staining pattern, whereas truly
-#' surface-stained cells have a more heterogeneous, ring-shaped structure.
+#' fraction of the 99th to 1th percentile range of the intensity of the island
+#' are removed. This is meant to get rid of dead cells that generally have a
+#' very homogenous staining pattern, whereas truly surface-stained cells have 
+#' a more heterogeneous, ring-shaped structure.
 #' @param reportIntensity Should the sum of the intensities for all the
 #' surviving islands be returned? Default is FALSE.
 #' @param diagnoImgs Should a images delimiting the islands that have been
@@ -173,6 +173,7 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
                    intensityCutoffReference = TRUE,
                    threshold_method = "Triangle",
                    ignore_white = FALSE,
+                   upperFilter = FALSE,
                    fraction = 0.7,
                    reportIntensity = FALSE,
                    diagnoImgs = TRUE,

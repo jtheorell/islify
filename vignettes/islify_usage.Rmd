@@ -1,5 +1,5 @@
 ---
-title: Typical usage of islify, both with and without a co-localised reference
+title: Typical usage of islify, both with and without a co-expression reference
 author: 
 - name: Jakob Theorell
   affiliation: 
@@ -18,8 +18,7 @@ output:
 ```{r style, echo=FALSE, results='hide', message=FALSE}
 library(BiocStyle)
 library(knitr)
-opts_chunk$set(error = FALSE, message = FALSE, warning = FALSE)
-knitr::opts_chunk$set(echo = TRUE)
+opts_chunk$set(error = FALSE, message = FALSE, warning = FALSE, echo = TRUE)
 ```
 
 # Introduction
@@ -93,31 +92,38 @@ quantIntensities <- getQuantileIntensities(list(posImage),
 )
 quantIntensities
 ```
-This output tells us a number of things: first of all, these files are
-seemingly normalised to the 0-1 range. Often, this is done in an RGB-compliant
-manner, so that each files lowest and highest values are set to 0 and 1, but
-it is much preferred if files with the original intensities are saved, as this 
-will allow us to make more accurate between-image comparisons, which is of
-course the core point of this package. In this specific case, the files have
-been normalised together, and therefore they can still be compared with the
-same intensity thresholds, etc. 
-We can furthermore learn that the file contains three colors and
+
+This output tells us a number of things:
+
+1. these files are seemingly normalised to the 0-1 range. 
+    + Often, this is done in an RGB-compliant manner, so that each files lowest
+    and highest values are set to 0 and 1, but it is much preferred if files
+    with the original intensities are saved, as this will allow us to make more
+    accurate between-image comparisons, which is of course the core point of
+    this package. 
+    + In this specific case, the files have been normalised together, and
+    therefore they can still be compared with the same intensity thresholds,
+    etc. 
+2. We can furthermore learn that the file contains three colors and
 we can also see that this file seems to have reasonably balanced intensities in
-the three different colors, and very skewed. 
-A point worth making here and repeatedly is that the colors can have any order
-within the data. As multiple file formats are accepted, and as the metadata
-containing the information about said order differs substantially between the
-formats, it is up to the user to provide the information about which frame in
-the files that contain which color. Currently, only three colors are accepted,
-and as the visual output are RGB-based png files, red, green and blue are the
-only supported colors. If this restricts you, then please reach out and we can
-discuss workarounds and updates to the package. 
-NB! If the order of the colors in the microscope and therefore the file in fact
-is DAPI for nuclear staining (blue), then phycoerythrin for IgG staining (red)
-and finally fusion-protein EGFP (green), and the user provides the color order
-Red-Green-Blue, then the nuclei will look red, the IgG green and the EGFP blue
-in the output, so this can lead to severe mistakes. So make sure to check this
-order before, e.g. by investigating one or a few files briefly with ImageJ. 
+the three different colors, which all show very skewed distributions. 
+    + A point worth making here and repeatedly is that the colors can have
+    any order within the data. As multiple file formats are accepted, and as
+    the metadata containing the information about said order differs
+    substantially between the formats, it is up to the user to provide the
+    information about which frame in the files that contain which color.
+    Currently, only three colors are accepted, and as the visual output are
+    RGB-based png files, red, green and blue are the only supported colors. If
+    this restricts you, then please reach out and we can discuss workarounds
+    and updates to the package. 
+    + Therefore, NB: If the order of the colors in the file in fact is DAPI
+    for nuclear staining (blue), then phycoerythrin for IgG
+    staining (red) and finally fusion-protein EGFP (green), and the user
+    provides the color order Red-Green-Blue, then the nuclei will look red,
+    the IgG green and the EGFP blue in the output, so this can lead to severe
+    misinterpretation. So make sure to check this order before, e.g. by
+    investigating one or a few files briefly with ImageJ or simply by comparing
+    positive and negative controls with the getQuantileIntensities function.
 
 ## Use saveImage for quality control and sanity checks
 With saveImage, you can save any one of the colors in the data, as well as 
@@ -245,8 +251,9 @@ This function can in addition to these results also generate a diagnostic
 image for each analysed image. These images look like this, with the red colors
 indicating the selected islands: 
 ![Image Name](Images/diagnoImgs_no_green.png)
+
 ## Running islify including a reference color
-#Here, we add the information gathered about the EGFP as well, to further
+Here, we add the information gathered about the EGFP as well, to further
 select the areas of analysis. This might not make very much sense in this
 very clean example, but in more noisy, normal-world data, it is often this
 cleanup step that makes this method advantageous compared to direct visual

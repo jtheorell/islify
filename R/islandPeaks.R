@@ -16,7 +16,9 @@ islandPeaks <- function(islandPicture, intensityVec, fraction) {
                 locIsland <- splitIslands[[x]]
                 locIntensities <- splitIntensities[[x]]
                 maxVal <- quantile(locIntensities, 0.99)
-                fracVal <- maxVal * fraction
+                minVal <- quantile(locIntensities, 0.01)
+                range <- maxVal - minVal
+                fracVal <- (fraction * range) + minVal
                 locIsland[-which(locIntensities < fracVal), ]
             })
         )
