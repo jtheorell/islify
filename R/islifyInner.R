@@ -1,8 +1,8 @@
 islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
                         diagnoImgs, truncTo, outDir, imgNames, numPix,
                         highNoise, intensityCutoff, threshold_method,
-                        fraction, numOfImgs, reportIntensity,
-                        ignore_white,
+                        ringFrac, flatFrac, truncLim = "max", numOfImgs,
+                        reportIntensity, ignore_white,
                         otherPlotDat = FALSE, fromIslifyOuter = FALSE) {
     imgDir <- imgDirs[[imgNum]]
     locFile <- importFile(imgDir, frameNum, numOfImgs,
@@ -30,6 +30,7 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
             ignore_white <- ignore_white*1000
         }
     }
+    
     # Here, we restrict the number of pixels, in applicable cases, to a
     # randomly located subset of the frame
     if (is.numeric(numPix)) {
@@ -45,6 +46,10 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
                                        ignore_white)
     }
 
+    #Here we define the truncation limit. 
+    if(truncLim == "max"){
+        truncLim <-  max(locFileClean)
+    }
     locFileClean[which(locFile <= intensityCutoff)] <- 0
     if (length(which(locFileClean != 0)) / length(locFileClean) > 0.9) {
         warning(
@@ -65,10 +70,16 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
         locFileClean[which(locFile <= intensityCutoff2)] <- 0
     }
 
-    locFile01 <- locFileClean
+    
     resList <- list()
     # We include information about the first filter threshold
     resList$intensityCutoff <- intensityCutoff
+    
+    #Before going anywhere else, we will also truncate the values above the
+    #truncation limit. 
+    locFileClean[which(locFileClean > truncLim)] <- truncLim
+    
+    locFile01 <- locFileClean
 
     # In the case that there is nothing but noise below background, a negative
     # result is thrown back here
@@ -101,7 +112,8 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
                 locHighIsles <- islandPeaks(locFileBigIsles,
                     intensityVec =
                         as(locFileClean, "dgCMatrix")@x,
-                    fraction = fraction
+                    ringFrac = ringFrac,
+                    flatFrac = flatFrac
                 )
                 diametersHigh <- islandDiameter(locHighIsles,
                     statistic = "min"

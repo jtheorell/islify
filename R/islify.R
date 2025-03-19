@@ -62,24 +62,27 @@
 #' inherited from getQuantileIntensities, then the values above this level will
 #' not be considered when identifying the background threshold. Remedies some
 #' of the variance between negative and positive control samples.
-#' @param fraction The central filter, after a crude minimal diameter
+#' @param ringFrac The positive selection filter. After a crude minimal diameter
 #' criterion, checks if the island retains its width even if pixels below this
 #' fraction of the 99th to 1th percentile range of the intensity of the island
-#' are removed. This is meant to get rid of dead cells that generally have a
-#' very homogenous staining pattern, whereas truly surface-stained cells have 
-#' a more heterogeneous, ring-shaped structure.
+#' are removed. The point is to actively seek truly poiitive islands as 
+#' surface-stained cells have a heterogeneous, ring-shaped structure. 
+#' @param flatFrac The negative selection filter, meant to get rid of dead
+#' cells that generally have a very homogenous staining pattern. If the median
+#' absolute deviation is lower than the flatFrac of the range from the 99th
+#' percentile of the island to 0, then it is considered flat and excluded.
+#' @param truncLim In extreme cases, such as with the NMDA-R assay, it might
+#' be helpful to truncated the most highly stained cells, as they 
+#' counterintuirively tend to be part of the background. The level for this
+#' truncation limit is set here. THis also affects the diagnoImgs if these
+#' are present. It can be helpful to consult the 
+#' \code{\link{getQuantileIntensities}} function to identify suitable values
+#' here. In most instances, it is however advisable to stick to the default
+#' max. 
 #' @param reportIntensity Should the sum of the intensities for all the
 #' surviving islands be returned? Default is FALSE.
 #' @param diagnoImgs Should a images delimiting the islands that have been
 #' selected be returned?
-#' @param truncTo If diagnoImgs is TRUE, above which value should the data
-#' be truncated? This argument has two possible inputs: a numeric value or
-#' "max". Vectors of individual values, the same length as frameCols are also
-#' accepted. The value option is often the most suitable, but requires some
-#' knowledge of the range of values expected in the file. For this, the
-#' \code{\link{getQuantileIntensities}} function can be useful to provide
-#' reasonable values. If this argument is set to a lower value than the true
-#' max, the data will be truncated and a warning thrown.
 #' @param outDir The directory that the diagnoImages should be saved in. Only
 #' used together with diagnoImgs = TRUE.
 #' @param highNoise Is the assay especially noisy, with very high and 
@@ -174,10 +177,11 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
                    threshold_method = "Triangle",
                    ignore_white = FALSE,
                    upperFilter = FALSE,
-                   fraction = 0.7,
+                   ringFrac = 0.7,
+                   flatFrac = 0.01,
+                   truncLim = "max",
                    reportIntensity = FALSE,
                    diagnoImgs = TRUE,
-                   truncTo = "max",
                    outDir = ".",
                    highNoise = FALSE,
                    numPix = "All",
@@ -202,7 +206,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
             frameNum = frameNumFocus,
             sizeCutoff = sizeCutoff,
             diagnoImgs = diagnoImgs,
-            truncTo = truncTo,
+            truncLim = truncLim,
+            truncTo = truncLim,
             outDir = outDir,
             imgNames = imgNames,
             numPix = numPix,
@@ -210,7 +215,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
             intensityCutoff = intensityCutoffFocus,
             threshold_method = threshold_method,
             ignore_white = ignore_white,
-            fraction = fraction,
+            ringFrac = ringFrac,
+            flatFrac = flatFrac,
             reportIntensity = reportIntensity,
             numOfImgs = numOfImgs
         )))
@@ -224,7 +230,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
                 frameNumReference,
             sizeCutoff = sizeCutoff,
             diagnoImgs = diagnoImgs,
-            truncTo = truncTo,
+            truncLim = truncLim,
+            truncTo = truncLim,
             outDir = outDir,
             imgNames = imgNames,
             numPix = numPix,
@@ -233,7 +240,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
                 intensityCutoffFocus,
             threshold_method = threshold_method,
             ignore_white = ignore_white,
-            fraction = fraction,
+            ringFrac = ringFrac,
+            flatFrac = flatFrac,
             reportIntensity =
                 reportIntensity,
             intensityCutoffReference =

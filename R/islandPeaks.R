@@ -2,7 +2,7 @@
 # intensities might vary considerably for each cell. We use the 99th
 # percentile of the cells here, to avoid the very extreme events having an
 # unduly influence on the results.
-islandPeaks <- function(islandPicture, intensityVec, fraction) {
+islandPeaks <- function(islandPicture, intensityVec, ringFrac, flatFrac) {
     origDims <- dim(islandPicture)
     smIsl <- as.data.frame(summary(islandPicture))
     colnames(smIsl) <- c("row", "column", "island")
@@ -16,10 +16,20 @@ islandPeaks <- function(islandPicture, intensityVec, fraction) {
                 locIsland <- splitIslands[[x]]
                 locIntensities <- splitIntensities[[x]]
                 maxVal <- quantile(locIntensities, 0.99)
-                minVal <- quantile(locIntensities, 0.01)
-                range <- maxVal - minVal
-                fracVal <- (fraction * range) + minVal
-                locIsland[-which(locIntensities < fracVal), ]
+                #Here, we are actually evaluating two different aspects: 
+                #First, we check whether the median absolute deviation
+                #of the values is very low compared to the range from max
+                #to 0. If so, the island is deemed flat and reduced to a 
+                #single pixel. 
+                locMad <- mad(locIntensities)
+                if(locMad < flatFrac*maxVal){
+                    locIsland[1,]
+                } else {
+                    minVal <- quantile(locIntensities, 0.01)
+                    range <- maxVal - minVal
+                    fracVal <- (ringFrac * range) + minVal
+                    locIsland[-which(locIntensities < fracVal), ]
+                }
             })
         )
     locSM <- sparseMatrix(
