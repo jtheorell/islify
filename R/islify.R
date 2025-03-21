@@ -30,6 +30,13 @@
 #' that only areas with GFP expression can contain meaningful expression of
 #' the marker of primary interest, and then only these areas will be 
 #' considered.
+#' @param frameNumNuclei If no reference is present, but a nuclear staining is,
+#' this parameter can be used to identify which approximate surface area 
+#' for the individual picture that could under optimal circumstances be 
+#' covered with antibodies. As the nuclei are smaller than the cells, it is
+#' theoretically possible to get a report back of a fraction exceeding 1, but
+#' this is an unlikely scenario, as 100 percent transfection efficiency is
+#' seldomly obtained. 
 #' @param sizeCutoff The size of a typical cell nucleus. This is used to
 #' identify structures of a size equal to or larger than this cell threshold.
 #' Smaller objects that are ring-shaped will be excluded with this cutoff,
@@ -51,6 +58,8 @@
 #' simply because the rate from the lowest to the highest signal is more
 #' stretched out in a case with noise only.
 #' @param intensityCutoffReference Same as above but for the reference frame,
+#' if present.
+#' @param intensityCutoffNuclei Same as above but for the nuclei frame,
 #' if present.
 #' @param threshold_method The method used for thresholding. Available
 #' alternatives are the same as for the
@@ -171,9 +180,11 @@
 #' )
 islify <- function(imgDirs, imgNames, frameNumFocus,
                    frameNumReference = FALSE,
+                   frameNumNuclei = FALSE,
                    sizeCutoff,
                    intensityCutoffFocus = TRUE,
                    intensityCutoffReference = TRUE,
+                   intensityCutoffNuclei = TRUE,
                    threshold_method = "Triangle",
                    ignore_white = FALSE,
                    upperFilter = FALSE,
@@ -186,6 +197,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
                    highNoise = FALSE,
                    numPix = "All",
                    numOfImgs = "All") {
+    
+    #Before anything else, we run input validity checks
     # First, we deal with the special case where the imgDir is not a directory
     # or a list of files, but an individual file, either containing only one
     # color matrix or a list of color matrices.
@@ -198,12 +211,17 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
     if (is.matrix(imgDirs[[1]])) {
         imgDirs <- list(imgDirs)
     }
+    
+    if(class(imgDirs) != "list"){
+        stop("imgDirs should either be a file or a list")
+    }
 
     if (frameNumReference == FALSE) {
         resDf <- as.data.frame(do.call("rbind", lapply(seq_along(imgDirs),
             islifyInner,
             imgDirs = imgDirs,
             frameNum = frameNumFocus,
+            frameNumNuclei = frameNumNuclei,
             sizeCutoff = sizeCutoff,
             diagnoImgs = diagnoImgs,
             truncLim = truncLim,
@@ -213,6 +231,7 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
             numPix = numPix,
             highNoise = highNoise,
             intensityCutoff = intensityCutoffFocus,
+            intensityCutoffNuclei = intensityCutoffNuclei,
             threshold_method = threshold_method,
             ignore_white = ignore_white,
             ringFrac = ringFrac,
@@ -220,7 +239,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
             reportIntensity = reportIntensity,
             numOfImgs = numOfImgs
         )))
-    } else {
+        
+    } else if (class(frameNumReference) == "numeric") {
         resDf <- as.data.frame(do.call("rbind", lapply(seq_along(imgDirs),
             islifyOuter,
             imgDirs = imgDirs,

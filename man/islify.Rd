@@ -9,9 +9,11 @@ islify(
   imgNames,
   frameNumFocus,
   frameNumReference = FALSE,
+  frameNumNuclei = FALSE,
   sizeCutoff,
   intensityCutoffFocus = TRUE,
   intensityCutoffReference = TRUE,
+  intensityCutoffNuclei = TRUE,
   threshold_method = "Triangle",
   ignore_white = FALSE,
   upperFilter = FALSE,
@@ -48,6 +50,14 @@ that only areas with GFP expression can contain meaningful expression of
 the marker of primary interest, and then only these areas will be 
 considered.}
 
+\item{frameNumNuclei}{If no reference is present, but a nuclear staining is,
+this parameter can be used to identify which approximate surface area 
+for the individual picture that could under optimal circumstances be 
+covered with antibodies. As the nuclei are smaller than the cells, it is
+theoretically possible to get a report back of a fraction exceeding 1, but
+this is an unlikely scenario, as 100 percent transfection efficiency is
+seldomly obtained.}
+
 \item{sizeCutoff}{The size of a typical cell nucleus. This is used to
 identify structures of a size equal to or larger than this cell threshold.
 Smaller objects that are ring-shaped will be excluded with this cutoff,
@@ -71,6 +81,9 @@ simply because the rate from the lowest to the highest signal is more
 stretched out in a case with noise only.}
 
 \item{intensityCutoffReference}{Same as above but for the reference frame,
+if present.}
+
+\item{intensityCutoffNuclei}{Same as above but for the nuclei frame,
 if present.}
 
 \item{threshold_method}{The method used for thresholding. Available

@@ -1,10 +1,14 @@
-islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
+islifyInner <- function(imgNum, imgDirs, frameNum, 
+                        frameNumNuclei = FALSE, sizeCutoff,
                         diagnoImgs, truncTo, outDir, imgNames, numPix,
-                        highNoise, intensityCutoff, threshold_method,
+                        highNoise, intensityCutoff, 
+                        intensityCutoffNuclei = FALSE,
+                        threshold_method,
                         ringFrac, flatFrac, truncLim = "max", numOfImgs,
                         reportIntensity, ignore_white,
                         otherPlotDat = FALSE, fromIslifyOuter = FALSE) {
     imgDir <- imgDirs[[imgNum]]
+    
     locFile <- importFile(imgDir, frameNum, numOfImgs,
         fromIslifyOuter = fromIslifyOuter
     )
@@ -44,6 +48,19 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
         intensityCutoff <- auto_thresh(locFile, 
                                        threshold_method, 
                                        ignore_white)
+    }
+    
+    if(class(frameNumNuclei) == "integer"){
+        locFileNucleus <- importFile(imgDir, frameNumNuclei, numOfImgs,
+                                     fromIslifyOuter = fromIslifyOuter
+        )
+        if(is.logical(intensityCutoffNuclei) && intensityCutoffNuclei == TRUE){
+            intensityCutoffNuclei <- auto_thresh(locFileNucleus, 
+                                                 threshold_method, 
+                                                 ignore_white)
+        }
+        numOfNucleatedPixels <- 
+            length(which(as.vector(locFileNucleus) > intensityCutoffNuclei))
     }
 
     #Here we define the truncation limit. 
@@ -145,6 +162,13 @@ islifyInner <- function(imgNum, imgDirs, frameNum, sizeCutoff,
             resList$fractionOfAll_focus <-
                 sum(unlist(bigIslandPixels)) /
                     (dim(locFileBigIsles)[1] * dim(locFileBigIsles)[2])
+            
+            #And if we have the nucleus information, this is exported here. 
+            if(class(frameNumNuclei) == "integer"){
+                resList$fractionOfNuclei <- 
+                    sum(unlist(bigIslandPixels))/numOfNucleatedPixels
+            }
+                
         } else {
             resList$fractionOfAll_focus <- 0
             if (reportIntensity) {
