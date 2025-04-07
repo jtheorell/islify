@@ -8,7 +8,8 @@ res <- islify(
     frameNumFocus = 1,
     sizeCutoff = 40,
     intensityCutoffFocus = 0.035,
-    diagnoImgs = FALSE
+    diagnoImgs = FALSE,
+    flatFrac = 0
 )
 
 test_that("islify expected output without ref", {
@@ -24,14 +25,15 @@ res <- islify(
     sizeCutoff = 40,
     intensityCutoffFocus = 0.035,
     intensityCutoffReference= 0.05,
-    diagnoImgs = FALSE
+    diagnoImgs = FALSE,
+    flatFrac = 0
 )
 
 test_that("islify expected output with ref", {
     expect_true(round(res$fractionOfAll_ref[1],2) == 0.22 && 
                     round(res$fractionOfAll_ref[2], 2) == 0.06 && 
                     res$fractionOfAll_focus[1] == 0 && 
-                    round(res$fractionOfAll_focus[2], 2) == 0.02 &&
+                    round(res$fractionOfAll_focus[2], 2) == 0.05 &&
                     res$fractionOfRef_focus[1] == 0 && 
-                    round(res$fractionOfRef_focus[2], 2) == 0.39)
+                    round(res$fractionOfRef_focus[2], 2) == 0.85)
 })

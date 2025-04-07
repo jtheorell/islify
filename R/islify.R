@@ -9,7 +9,7 @@
 #' @importFrom RBioFormats read.image
 #' @importFrom autothresholdr auto_thresh
 #' @importFrom Matrix Matrix sparseMatrix summary
-#' @importFrom stats sd median quantile
+#' @importFrom stats sd median quantile mahalanobis mad cov var
 #' @importFrom dbscan dbscan
 #' @importFrom abind abind
 #' @importFrom methods new as is
@@ -75,11 +75,13 @@
 #' criterion, checks if the island retains its width even if pixels below this
 #' fraction of the 99th to 1th percentile range of the intensity of the island
 #' are removed. The point is to actively seek truly poiitive islands as 
-#' surface-stained cells have a heterogeneous, ring-shaped structure. 
+#' surface-stained cells have a heterogeneous, ring-shaped structure. This
+#' is not used in the default setting. 
 #' @param flatFrac The negative selection filter, meant to get rid of dead
 #' cells that generally have a very homogenous staining pattern. If the median
-#' absolute deviation is lower than the flatFrac of the range from the 99th
-#' percentile of the island to 0, then it is considered flat and excluded.
+#' absolute deviation is lower than the flatFrac of the range from the 99th to
+#' the 1st percentile of the island, then it is considered flat and excluded. 
+#' Low values, in the range of 0.001 to 0.1 are recommended. 
 #' @param truncLim In extreme cases, such as with the NMDA-R assay, it might
 #' be helpful to truncated the most highly stained cells, as they 
 #' counterintuirively tend to be part of the background. The level for this
@@ -187,9 +189,8 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
                    intensityCutoffNuclei = TRUE,
                    threshold_method = "Triangle",
                    ignore_white = FALSE,
-                   upperFilter = FALSE,
-                   ringFrac = 0.7,
-                   flatFrac = 0.01,
+                   ringFrac = 0,
+                   flatFrac = 0,
                    truncLim = "max",
                    reportIntensity = FALSE,
                    diagnoImgs = TRUE,
@@ -212,8 +213,16 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
         imgDirs <- list(imgDirs)
     }
     
-    if(class(imgDirs) != "list"){
+    if(inherits(imgDirs, what = "list") == FALSE){
         stop("imgDirs should either be a file or a list")
+    } else if(identical(length(imgDirs), length(imgNames)) == FALSE){
+        stop("The number of images and image names needs to be the same")
+    } else if(inherits(frameNumFocus, "numeric") == FALSE){
+        stop("The frame number needs to be numeric")
+    } else if(inherits(sizeCutoff, "numeric") == FALSE){
+        stop("The size cutoff needs to be numeric")
+    } else if(inherits(threshold_method, "character") == FALSE){
+        stop("The threshold method should be a character string")
     }
 
     if (frameNumReference == FALSE) {
@@ -240,7 +249,7 @@ islify <- function(imgDirs, imgNames, frameNumFocus,
             numOfImgs = numOfImgs
         )))
         
-    } else if (class(frameNumReference) == "numeric") {
+    } else if (inherits(frameNumReference, what = "numeric")) {
         resDf <- as.data.frame(do.call("rbind", lapply(seq_along(imgDirs),
             islifyOuter,
             imgDirs = imgDirs,

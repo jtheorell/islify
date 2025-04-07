@@ -25,10 +25,15 @@ islandPeaks <- function(islandPicture, intensityVec, ringFrac, flatFrac) {
                 if(locMad < flatFrac*maxVal){
                     locIsland[1,]
                 } else {
-                    minVal <- quantile(locIntensities, 0.01)
+                    minVal <- min(locIntensities)
                     range <- maxVal - minVal
                     fracVal <- (ringFrac * range) + minVal
-                    locIsland[-which(locIntensities < fracVal), ]
+                    if(any(locIntensities < fracVal)){
+                        locIsland[-which(locIntensities < fracVal), ]
+                    } else {
+                        locIsland
+                    }
+                    
                 }
             })
         )

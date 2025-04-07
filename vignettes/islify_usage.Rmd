@@ -217,7 +217,7 @@ result <- islify(
     sizeCutoff = sizeCutoff,
     intensityCutoffFocus =
         intensityCutoffRed,
-    truncTo =
+    truncLim =
         quantIntensities[[1]][, "Percent_95"][1]
 )
 ```
@@ -230,8 +230,6 @@ result <- islify(
     sizeCutoff = sizeCutoff,
     intensityCutoffFocus =
         intensityCutoffRed,
-    truncTo =
-        quantIntensities[[1]][, "Percent_95"][1],
     diagnoImgs = FALSE
 )
 ```
@@ -270,7 +268,7 @@ result <- islify(
         intensityCutoffRed,
     intensityCutoffReference =
         intensityCutoffGreen,
-    truncTo =
+    truncLim =
         quantIntensities[[1]][, "Percent_95"][1]
 )
 ```
@@ -286,7 +284,7 @@ result <- islify(
         intensityCutoffRed,
     intensityCutoffReference =
         intensityCutoffGreen,
-    truncTo =
+    truncLim =
         quantIntensities[[1]][, "Percent_95"][1],
     diagnoImgs = FALSE
 )

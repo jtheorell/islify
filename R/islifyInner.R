@@ -43,21 +43,24 @@ islifyInner <- function(imgNum, imgDirs, frameNum,
 
     locFileClean <- locFile
 
-    if (is.logical(intensityCutoff) && intensityCutoff == TRUE) {
-        # This specific triangle method seems to work the best
-        intensityCutoff <- auto_thresh(locFile, 
-                                       threshold_method, 
-                                       ignore_white)
-    }
+    if (is.logical(intensityCutoff)){
+        if(intensityCutoff){
+            intensityCutoff <- as.numeric(auto_thresh(locFile, 
+                                                      threshold_method, 
+                                                      ignore_white))
+        } else {
+            intensityCutoff <- min(locFile)
+        }
+    } 
     
-    if(class(frameNumNuclei) == "integer"){
+    if(inherits(frameNumNuclei, what = "integer")){
         locFileNucleus <- importFile(imgDir, frameNumNuclei, numOfImgs,
                                      fromIslifyOuter = fromIslifyOuter
         )
         if(is.logical(intensityCutoffNuclei) && intensityCutoffNuclei == TRUE){
-            intensityCutoffNuclei <- auto_thresh(locFileNucleus, 
+            intensityCutoffNuclei <- as.numeric(auto_thresh(locFileNucleus, 
                                                  threshold_method, 
-                                                 ignore_white)
+                                                 ignore_white = ignore_white))
         }
         numOfNucleatedPixels <- 
             length(which(as.vector(locFileNucleus) > intensityCutoffNuclei))
@@ -67,7 +70,9 @@ islifyInner <- function(imgNum, imgDirs, frameNum,
     if(truncLim == "max"){
         truncLim <-  max(locFileClean)
     }
+    
     locFileClean[which(locFile <= intensityCutoff)] <- 0
+    
     if (length(which(locFileClean != 0)) / length(locFileClean) > 0.9) {
         warning(
             "More than 90% of the pixels are positive with this threshold. ",
@@ -79,11 +84,11 @@ islifyInner <- function(imgNum, imgDirs, frameNum,
     # we disregard the information from the areas devoid of cells, and also
     # remove the noise from the non-important cells.
     if (highNoise) {
-        intensityCutoff2 <- auto_thresh(round(locFileClean * 100),
+        intensityCutoff2 <- as.numeric(auto_thresh(round(locFileClean * 100),
             threshold_method,
             ignore_black = TRUE,
             ignore_white = ignore_white
-        ) / 100
+        ) / 100)
         locFileClean[which(locFile <= intensityCutoff2)] <- 0
     }
 
@@ -100,8 +105,12 @@ islifyInner <- function(imgNum, imgDirs, frameNum,
 
     # In the case that there is nothing but noise below background, a negative
     # result is thrown back here
-    if (length(which(locFile01 != 0)) == 0) {
+    if (length(which(locFile01 != 0)) == 0
+        ) {
         resList$fractionOfAll_focus <- 0
+        if(inherits(frameNumNuclei, what = "integer")){
+            resList$fractionOfNuclei <- 0
+        }
         if (reportIntensity) {
             resList$intensitySum <- 0
         }
@@ -135,17 +144,33 @@ islifyInner <- function(imgNum, imgDirs, frameNum,
                 diametersHigh <- islandDiameter(locHighIsles,
                     statistic = "min"
                 )
-                highIslePixels <- islandPixels(locHighIsles)
 
                 # Now, we are going to create an interesting criterion: only
                 # islands that retain their diameter even after all values
                 # below the fraction of the 99th percentile are kept.
-                locFileBigIsles <- islandRemoval(
-                    locFileBigIsles,
+                locFileRaggedIsles <- islandRemoval(
+                    locHighIsles,
                     diametersHigh,
                     sizeCutoff
                 )
-
+                
+                #And now a further criterion. Given that clumps of cells at
+                #times give rise to considerable extra background, which in
+                #all other ways "seems" like true signal to the software, 
+                #we here remove any island that is part of a large chunk of
+                #the picture where the median is higher than the median+3MAD
+                #for the whole picture. THis only applies if the picture is
+                #larger in one direction than 2000 pixels. 
+                
+                if(max(dim(locFileRaggedIsles)) > 2000){
+                    locFileBigIsles <- medianChunkFilter(locFileRaggedIsles, 
+                                                         locFile, 
+                                                         threshold_method, 
+                                                         ignore_white)
+                } else {
+                    locFileBigIsles <- locFileRaggedIsles
+                }
+                
                 if (reportIntensity) {
                     # Here, we add information about the sum of
                     # intensity in the big islands
@@ -164,13 +189,16 @@ islifyInner <- function(imgNum, imgDirs, frameNum,
                     (dim(locFileBigIsles)[1] * dim(locFileBigIsles)[2])
             
             #And if we have the nucleus information, this is exported here. 
-            if(class(frameNumNuclei) == "integer"){
+            if(inherits(frameNumNuclei, what = "integer")){
                 resList$fractionOfNuclei <- 
                     sum(unlist(bigIslandPixels))/numOfNucleatedPixels
             }
                 
         } else {
             resList$fractionOfAll_focus <- 0
+            if(inherits(frameNumNuclei, what = "integer")){
+                resList$fractionOfNuclei <- 0
+            }
             if (reportIntensity) {
                 resList$intensitySum <- 0
             }

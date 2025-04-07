@@ -160,7 +160,7 @@ saveImage <- function(imgDirs, imgNames, frameNums = "All", frameCols,
                 )
                 saveImageInner(
                     locImg = locFile,
-                    frameCol = frameCol,
+                    frameCol = frameCols,
                     truncToInner = truncTo,
                     imgName = imgName,
                     outDir = outDir

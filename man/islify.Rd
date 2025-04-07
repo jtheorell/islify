@@ -16,9 +16,8 @@ islify(
   intensityCutoffNuclei = TRUE,
   threshold_method = "Triangle",
   ignore_white = FALSE,
-  upperFilter = FALSE,
-  ringFrac = 0.7,
-  flatFrac = 0.01,
+  ringFrac = 0,
+  flatFrac = 0,
   truncLim = "max",
   reportIntensity = FALSE,
   diagnoImgs = TRUE,
@@ -102,12 +101,14 @@ of the variance between negative and positive control samples.}
 criterion, checks if the island retains its width even if pixels below this
 fraction of the 99th to 1th percentile range of the intensity of the island
 are removed. The point is to actively seek truly poiitive islands as 
-surface-stained cells have a heterogeneous, ring-shaped structure.}
+surface-stained cells have a heterogeneous, ring-shaped structure. This
+is not used in the default setting.}
 
 \item{flatFrac}{The negative selection filter, meant to get rid of dead
 cells that generally have a very homogenous staining pattern. If the median
-absolute deviation is lower than the flatFrac of the range from the 99th
-percentile of the island to 0, then it is considered flat and excluded.}
+absolute deviation is lower than the flatFrac of the range from the 99th to
+the 1st percentile of the island, then it is considered flat and excluded. 
+Low values, in the range of 0.001 to 0.1 are recommended.}
 
 \item{truncLim}{In extreme cases, such as with the NMDA-R assay, it might
 be helpful to truncated the most highly stained cells, as they 
